@@ -1,0 +1,53 @@
+services:
+  openWebUI:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: ${PROJECT_NAME}_open_web_ui
+    restart: always
+    ports:
+      - "3000:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - open-webui-local:/app/backend/data
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ${PROJECT_NAME}_ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_DEBUG=1
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0']
+            # count: all
+            capabilities: ['gpu']
+    volumes:
+      - ollama-local:/root/.ollama
+
+  # runner:
+  #   container_name: ${PROJECT_NAME}_pytorch_runner
+  #   build: 
+  #     context: ./Apps/runner
+  #     dockerfile: Dockerfile
+  #   runtime: nvidia
+  #   stdin_open: true
+  #   tty: true
+  #   ipc: host
+  #   environment:
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #   command: bash
+  #   volumes:
+  #     - ./DataStorage/runner/workspace:/workspace
+
+
+volumes:
+  ollama-local:
+    external: false
+  open-webui-local:
+    external: false
+
+    

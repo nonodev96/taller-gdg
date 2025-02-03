@@ -1,0 +1,9 @@
+FROM nvcr.io/nvidia/pytorch:25.01-py3
+
+WORKDIR /workspace
+
+RUN pip install --upgrade pip
+
+RUN apt update
+
+RUN apt install screen -y
