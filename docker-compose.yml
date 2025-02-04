@@ -1,16 +1,23 @@
 services:
   ollama:
     image: ollama/ollama:${DOCKER_OLLAMA_TAG-latest}
-    container_name: ollama
+    container_name: ${PROJECT_NAME}_ollama
     pull_policy: always
     tty: true
     restart: unless-stopped
     volumes:
       - local-ollama:/root/.ollama
-
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
   open-webui:
     image: ghcr.io/open-webui/open-webui:${DOCKER_WEBUI_TAG-main}
-    container_name: open-webui
+    container_name: ${PROJECT_NAME}_open-webui
     depends_on:
       - ollama
     ports:
@@ -32,12 +39,12 @@ services:
     command: bash
     stdin_open: true
     tty: true
+    ipc: host
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
       - ./Apps/runner-1-pytorch/workspace:/workspace
-    # Para compartir memoria entre procesos en multihilo
-    ipc: host
     runtime: nvidia
     deploy:
       resources:
@@ -57,14 +64,15 @@ services:
       args:
         - ENV_SIMIDAT=simidat
     command: bash
-    user: "${UID}:${GID}"
+    user: "${UID}:${GID}" # Comentar en windows
     stdin_open: true
     tty: true
+    ipc: host
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
       - ./Apps/runner-2-tensorflow/workspace:/workspace
-    ipc: host
     runtime: nvidia
     deploy:
       resources:
@@ -74,6 +82,7 @@ services:
               count: all
               capabilities:
                 - gpu
+
   runner_rapidsai:
     container_name: ${PROJECT_NAME}_runner_rapidsai-notebook
     image: nvcr.io/nvidia/rapidsai/notebooks:24.12-cuda12.5-py3.12
@@ -88,11 +97,14 @@ services:
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
-      - EXTRA_CONDA_PACKAGES=jq
-      - CONDA_TIMEOUT=5
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - EXTRA_CONDA_PACKAGES=beautifulsoup4
+      # - CONDA_TIMEOUT=5
       - EXTRA_PIP_PACKAGES=tabulate
       - PIP_TIMEOUT=5
-    shm_size: "1gb"
+    # configuración de  RapidsAI
+    pull_policy: always
+    shm_size: 1gb
     ulimits:
       memlock: -1
       stack: 67108864
@@ -104,7 +116,8 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [gpu]
+              capabilities: 
+                - gpu
 
 volumes:
   local-ollama:

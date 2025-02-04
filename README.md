@@ -1,29 +1,61 @@
-% Docker y NVIDIA
-% Antonio Mudarra Machuca
-% Febrero 15, 2025
+---
+marp: true
+title: Docker y NVIDIA
+author: Antonio Mudarra Machuca
+description: 'Introducción a docker y el soporte de gráficas NVIDIA con CUDA'
+backgroundImage: url('https://marp.app/assets/hero-background.svg')
 
-# Taller GDG
+paginate: true
+---
+
+<!-- 
+_header: 'Taller GDG'
+_footer: 'nonodev96'
+-->
+
+# Introducción a la IA con contenedores de alta eficiencia
+
+---
 
 ## Quien soy
 
+
 Soy Antonio Mudarra Machuca investigador en la Universidad de Jaén en el grupo de investigación SIMIDAT.
+
+---
 
 ## Objetivos del taller
 
 Mostrar las capacidades de **docker** para la ejecución de modelos de IA, simplificando todo el proceso de configuración de distintos entornos de desarrollo y ejecución.
 
-- Entender y manejar docker.
+✅ Introducción a docker y contenedores especializados en IA.
+✅ Configuración de entornos con PyTorch, TensorFlow y herramientas clave.
+✅ Conococer recursos de nvidia para el desarrollo y despliegue de modelos.
+✅ Ejecución de modelos LLM en tu propio ordenador con Ollama.
+- Breve introducción a la seguridad en modelos de IA.
+- Entender y manejar docker, gestionar recursos de un contenedor.
 - Comprender la diferencia entre imágenes y contenedores.
-- Gestionar recursos de un contenedor.
-- Conococer recursos de nvidia para el desarrollo y despliegue de modelos.
 - Conocer otras herramientas como ollama o traefik.
 
+---
+
+## Motivación
+
+- Facilidad de despliegue
+- Aislamiento de dispositivos individuales
+- Ejecución en entornos heterogéneos de controladores/toolkits
+- Sólo requiere la instalación del controlador NVIDIA en el host
+- Facilita la colaboración: compilaciones reproducibles, rendimiento reproducible, resultados reproducibles.
+
+---
 
 ## Introducción a docker
 
-![Funcionamiento de docker](./assets/docker-architecture.png)
-
 ![Virtual machines vs Containers](./assets/virtual-machines-vs-containers.png)
+
+---
+
+![Funcionamiento de docker](./assets/docker-architecture.png)
 
 ---
 
@@ -32,6 +64,8 @@ Instalación de docker engine en Ubuntu
 - [Install Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
 
 ---
+
+Descarga de los paquetes y actualización de las dependencias
 
 ```bash
 sudo apt-get update
@@ -44,6 +78,7 @@ echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
   $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
 sudo apt-get update
 ```
 
@@ -95,6 +130,29 @@ Instalación de docker desktop en windows, siguiente, siguiente, siguiente.
 
 ---
 
+## Creación de imágenes con docker
+
+Fichero `Dockerfile` genérico.
+
+```dockerfile
+# Definición de la imágen de docker de la que partir
+FROM ubuntu:22.04
+
+# Espacio de trabajo donde se iniciará el contenedor una vez creada la imagen
+WORKDIR /workspace
+
+# Ejemplo de comanndo durante la creación de la imagen
+RUN sudo apt update
+RUN sudo apt install screen -y
+
+# Ejemplo de ENTRYPOINT con CMD
+ENTRYPOINT ["/bin/echo"] # Por defecto ENTRYPOINT es `/bin/sh -c`
+CMD ["Hello"]
+```
+
+---
+
+
 ## NVIDIA CUDA y Librerías
 
 Instalación de CUDA, accedemos a la web para estudiar como instalar el kit de desarrollo de CUDA de nvidia, podemos descargar los drivers desde [CUDA Toolkit 12.8](https://developer.nvidia.com/cuda-downloads)
@@ -103,6 +161,8 @@ Para ver todo el listado de productos de nvidia con soporte de cuda podemos acce
 
 - [CUDA GUIDE WINDOWS](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/)
 - [CUDA GUIDE LINUX](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)
+
+---
 
 ### Sitemas operativos
 
@@ -130,7 +190,7 @@ nvcc --version
 
 ### Sistemas operativos compatibles:
 
-- Ubuntu 20.04, 22.04 y 24.04 # <- Recomendado
+- Ubuntu 20.04, 22.04 y 24.04 **⬅️ Recomendado**
 - Microsoft Windows 11 24H2, 22H2-SV2 y 23H2
 - Microsoft Windows 10 22H2
 - Microsoft Windows WSL 2
@@ -147,42 +207,19 @@ nvcc --version
   - CUDA Math Library (math.h)
 - cuDNN
   - CUDA Deep Neural Network
+- NCCL
+  - NVIDIA Collective Communications Library
+
 
 ---
 
 ### Descarga e instalación
-
-Descarga e instalación de CUDA para Windows [CUDA Installation Guide for Microsoft Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/)
 
 ---
 
 Descarga e instalación de CUDA para Linux [NVIDIA CUDA Installation Guide for Linux](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html)
 
 Instalación de drivers mediante `ubuntu-drivers` [nvidia-drivers-installation](https://ubuntu.com/server/docs/nvidia-drivers-installation)
-
----
-
-Ubuntu 20.04
-
-```bash
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-wget https://developer.download.nvidia.com/compute/cuda/12.8.0/local_installers/cuda-repo-ubuntu2004-12-8-local_12.8.0-570.86.10-1_amd64.deb
-sudo dpkg -i cuda-repo-ubuntu2004-12-8-local_12.8.0-570.86.10-1_amd64.deb
-sudo cp /var/cuda-repo-ubuntu2004-12-8-local/cuda-*-keyring.gpg /usr/share/keyrings/
-```
-
----
-
-Ubuntu 22.04
-
-```bash
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
-sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
-wget https://developer.download.nvidia.com/compute/cuda/12.8.0/local_installers/cuda-repo-ubuntu2204-12-8-local_12.8.0-570.86.10-1_amd64.deb
-sudo dpkg -i cuda-repo-ubuntu2204-12-8-local_12.8.0-570.86.10-1_amd64.deb
-sudo cp /var/cuda-repo-ubuntu2204-12-8-local/cuda-*-keyring.gpg /usr/share/keyrings/
-```
 
 ---
 
@@ -206,21 +243,34 @@ sudo mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
 wget https://developer.download.nvidia.com/compute/cuda/12.8.0/local_installers/cuda-repo-wsl-ubuntu-12-8-local_12.8.0-1_amd64.deb
 sudo dpkg -i cuda-repo-wsl-ubuntu-12-8-local_12.8.0-1_amd64.deb
 sudo cp /var/cuda-repo-wsl-ubuntu-12-8-local/cuda-*-keyring.gpg /usr/share/keyrings/
+
+sudo apt install build-essentials
 ```
 
 ---
+
+Tras la actualización de paquetes podemos instalar, instalamos con `apt`, es posible que se requiera un reinicio.
 
 ```bash
 sudo apt-get update
 sudo apt-get -y install cuda-toolkit-12-8
 ```
 
-Tras la instalación es posible que se requiera un reinicio, podemos comprobar si los drivers de nvidia están instalados con el comando `nvidia-smi` (NVIDIA System Management Interface).
+---
+
+Descarga e instalación de CUDA para Windows [CUDA Installation Guide for Microsoft Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/)
+
+
+---
+
+Podemos comprobar si los drivers de nvidia están instalados con el comando `nvidia-smi` (NVIDIA System Management Interface).
+
+
+---
 
 ## Docker NVIDIA
 
-
-![DOCKER NVIDIA Toolkit](./assets/docker-nvidia-toolkit.png)
+![bg right contain](./assets/docker-nvidia-toolkit.png)
 
 ---
 
@@ -232,20 +282,13 @@ docker run --gpus all --rm -ti nvcr.io/nvidia/pytorch:24.04-py3
 docker run --gpus 2 ...
 docker run --gpus "device=1,2" ...
 docker run --gpus "device=UUID-ABCDEF,1" ...
-
-#      Crear el contenedor
-#      |   Todas las GPUs
-#      |   |          Modo interactivo
-#      |   |          |   Eliminar le contenedor despues de usarlo
-#      |   |          |   |    permisos del usuario y grupo
-#      |   |          |   |    |                    Imagen a ejecutar
-#      |   |          |   |    |                    |
-#      v   v          v   v    v                    v
-docker run --gpus all -ti --rm -u $(id -u):$(id -g) nvcr.io/nvidia/pytorch:24.04-py3
-# Puede aparecer esta advertencia "groups: cannot find name for group ID 1000 I have no name!", puedes ignorarla
 ```
 
+---
+
 ![docker run](./assets/docker-run.png)
+
+Puede aparecer esta advertencia "groups: cannot find name for group ID 1000 I have no name!", puedes ignorarla
 
 ---
 
@@ -264,26 +307,12 @@ docker compose up [servicio] -d
 
 ---
 
-Dockerfile genérico
-
-```dockerfile
-FROM <imagen>
-
-# Espacio de trabajo donde se iniciará el contenedor una vez creada la imagen
-WORKDIR /workspace
-
-# Ejemplo de comanndo durante la creación de la imagen
-RUN sudo apt install screen -y
-
-# Ejemplo de ENTRYPOINT con CMD
-# Por defecto ENTRYPOINT es `/bin/sh -c`
-ENTRYPOINT ["/bin/echo"]
-CMD ["Hello"]
-```
 
 ## NVIDIA CATALOG
 
 [Catálogo de contenedores de NVIDIA](https://catalog.ngc.nvidia.com/)
+
+---
 
 ## NVIDIA-Pytorch
 
@@ -297,13 +326,13 @@ services:
     command: bash
     stdin_open: true
     tty: true
+    ipc: host # Para compartir memoria entre procesos en multihilo
+    runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
       - ./Apps/runner-pytorch/workspace:/workspace
-    # Para compartir memoria entre procesos en multihilo
-    ipc: host
-    runtime: nvidia
     deploy:
       resources:
         reservations:
@@ -328,12 +357,13 @@ services:
     command: bash
     stdin_open: true
     tty: true
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-    volumes:
-      - ./Apps/runner-tensorflow/workspace:/workspace
     ipc: host
     runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    volumes:
+      - ./Apps/runner-tensorflow/workspace:/workspace
     deploy:
       resources:
         reservations:
@@ -379,6 +409,7 @@ services:
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
       # Paquetes extra de conda a instalar
       - EXTRA_CONDA_PACKAGES=jq
       # Espera de 5 segundos tras instalar paquetes de conda.
@@ -405,9 +436,13 @@ services:
               capabilities: [gpu]
 ```
 
+---
+
 ## DEV Container
 
 ![DevContainers](./assets/architecture-containers.png)
+
+---
 
 ## OLLAMA
 
@@ -417,6 +452,8 @@ Esta tecnologia nos permite simplicar mucho la distribución de modelos para dis
 
 ![OLLAMA](./assets/ollama.png)
 
+---
+
 ## Ejemplo de docker compose de un chat-gpt propio
 
 ```yaml
@@ -424,6 +461,7 @@ services:
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: ${PROJECT_NAME}_open-webui
+    restart: unless-stopped
     volumes:
       - local-open-webui:/app/backend/data
     depends_on:
@@ -434,16 +472,15 @@ services:
       - "OLLAMA_BASE_URL=http://ollama:11434"
     extra_hosts:
       - host.docker.internal:host-gateway
-    restart: unless-stopped
 
   ollama:
     image: ollama/ollama:latest
     container_name: ${PROJECT_NAME}_ollama
+    restart: unless-stopped
+    tty: true
     volumes:
       - local-ollama:/root/.ollama
     pull_policy: always
-    tty: true
-    restart: unless-stopped
     # GPU support
     deploy:
       resources:
@@ -460,6 +497,8 @@ volumes:
     external: false
 ```
 
+---
+
 ## Traefik
 
 Para traefik debemos añadir la redireccion al servicio, con ubuntu/debian `sudo nano /etc/hosts` y para Windows abrir editor de texto con permisos de administrador el fichero `C:\Windows\System32\drivers\etc\hosts` y añadir la
@@ -468,6 +507,8 @@ Para traefik debemos añadir la redireccion al servicio, con ubuntu/debian `sudo
 # Añadimos el host
 127.0.0.1 chat.nonodev96.dev
 ```
+
+---
 
 ## Referencias
 
