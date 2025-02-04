@@ -5,16 +5,21 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"build": {
 		"dockerfile": "Dockerfile-pytorch",
-		"args": {}
+		// Argumentos con los que se contruye la imágen
+		"args": {} 
 	},
+
+	// Argumentos con los que se ejecuta el contenedor
 	"runArgs": [
 		"--gpus=all",
 		"--ipc=host"
 	],
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
+
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
+
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
 	"postCreateCommand": [

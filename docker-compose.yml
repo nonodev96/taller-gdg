@@ -16,8 +16,8 @@ services:
     ports:
       - ${OPEN_WEBUI_PORT-3000}:8080
     environment:
-      - 'OLLAMA_BASE_URL=http://ollama:11434'
-      - 'WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}'
+      - "OLLAMA_BASE_URL=http://ollama:11434"
+      - "WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}"
     volumes:
       - local-open-webui:/app/backend/data
     extra_hosts:
@@ -26,39 +26,88 @@ services:
 
   runner_pytorch:
     container_name: ${PROJECT_NAME}_runner_pytorch
-    build: 
-      context: ./Apps/runner-pytorch
+    build:
+      context: ./Apps/runner-1-pytorch
       dockerfile: Dockerfile
-    runtime: nvidia
-    ipc: host  # Para compartir memoria entre procesos en multihilo
+    command: bash
     stdin_open: true
     tty: true
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
-    command: bash
     volumes:
-      - ./Apps/runner-pytorch/workspace:/workspace
-  
+      - ./Apps/runner-1-pytorch/workspace:/workspace
+    # Para compartir memoria entre procesos en multihilo
+    ipc: host
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+
   runner_tensorflow:
     container_name: ${PROJECT_NAME}_runner_tensorflow
-    build: 
-      context: ./Apps/runner-tensorflow
+    # image: nvcr.io/nvidia/tensorflow:25.01-tf2-py3
+    build:
+      context: ./Apps/runner-2-tensorflow
       dockerfile: Dockerfile
-    runtime: nvidia
-    ipc: host
+      args:
+        - ENV_SIMIDAT=simidat
+    command: bash
+    user: "${UID}:${GID}"
     stdin_open: true
     tty: true
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
-    command: bash
     volumes:
-      - ./Apps/runner-tensorflow/workspace:/workspace
+      - ./Apps/runner-2-tensorflow/workspace:/workspace
+    ipc: host
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+  runner_rapidsai:
+    container_name: ${PROJECT_NAME}_runner_rapidsai-notebook
+    image: nvcr.io/nvidia/rapidsai/notebooks:24.12-cuda12.5-py3.12
+    #build:
+    #  context: ./Apps/runner-3-rapidsai
+    #  dockerfile: Dockerfile
+    ports:
+      - 8888:8888
+    stdin_open: true
+    tty: true
+    ipc: host
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - EXTRA_CONDA_PACKAGES=jq
+      - CONDA_TIMEOUT=5
+      - EXTRA_PIP_PACKAGES=tabulate
+      - PIP_TIMEOUT=5
+    shm_size: "1gb"
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    volumes:
+      - ./Apps/runner-3-rapidsai/workspace:/workspace
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
 volumes:
   local-ollama:
     external: false
   local-open-webui:
     external: false
-
-
-    
