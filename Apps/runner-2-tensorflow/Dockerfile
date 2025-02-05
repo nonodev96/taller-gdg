@@ -11,7 +11,7 @@ ARG ENV_SIMIDAT=simidat_default
 FROM nvcr.io/nvidia/tensorflow:25.01-tf2-py3
 
 
-WORKDIR /workspace
+WORKDIR /workspace_tensorflow
 
 # Instalación de depenndencias
 RUN pip install --upgrade pip

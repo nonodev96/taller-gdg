@@ -15,6 +15,8 @@ _footer: 'nonodev96'
 
 # Introducción a la IA con contenedores de alta eficiencia
 
+[@nonodev96/taller-gdg](https://github.com/nonodev96/taller-gdg)
+
 ---
 
 ## Quien soy
@@ -28,14 +30,14 @@ Soy Antonio Mudarra Machuca investigador en la Universidad de Jaén en el grupo 
 
 Mostrar las capacidades de **docker** para la ejecución de modelos de IA, simplificando todo el proceso de configuración de distintos entornos de desarrollo y ejecución.
 
-✅ Introducción a docker y contenedores especializados en IA.
-✅ Configuración de entornos con PyTorch, TensorFlow y herramientas clave.
-✅ Conococer recursos de nvidia para el desarrollo y despliegue de modelos.
-✅ Ejecución de modelos LLM en tu propio ordenador con Ollama.
-- Breve introducción a la seguridad en modelos de IA.
-- Entender y manejar docker, gestionar recursos de un contenedor.
-- Comprender la diferencia entre imágenes y contenedores.
-- Conocer otras herramientas como ollama o traefik.
+✅ Introducción a docker y contenedores especializados en IA
+✅ Configuración de entornos con PyTorch, TensorFlow y herramientas clave
+✅ Conococer recursos de nvidia para el desarrollo y despliegue de modelos
+✅ Ejecución de modelos LLM en tu propio ordenador con Ollama
+- Breve introducción a la seguridad en modelos de IA
+- Entender y manejar docker, gestionar recursos de un contenedor
+- Comprender la diferencia entre imágenes y contenedores
+- Conocer otras herramientas como ollama o traefik
 
 ---
 
@@ -45,7 +47,7 @@ Mostrar las capacidades de **docker** para la ejecución de modelos de IA, simpl
 - Aislamiento de dispositivos individuales
 - Ejecución en entornos heterogéneos de controladores/toolkits
 - Sólo requiere la instalación del controlador NVIDIA en el host
-- Facilita la colaboración: compilaciones reproducibles, rendimiento reproducible, resultados reproducibles.
+- Facilita la colaboración: compilaciones reproducibles, rendimiento reproducible, resultados reproducibles
 
 ---
 
@@ -147,11 +149,10 @@ RUN sudo apt install screen -y
 
 # Ejemplo de ENTRYPOINT con CMD
 ENTRYPOINT ["/bin/echo"] # Por defecto ENTRYPOINT es `/bin/sh -c`
-CMD ["Hello"]
+CMD ["hello world!"]
 ```
 
 ---
-
 
 ## NVIDIA CUDA y Librerías
 
@@ -188,7 +189,7 @@ nvcc --version
 
 ---
 
-### Sistemas operativos compatibles:
+### Sistemas operativos compatibles con CUDA:
 
 - Ubuntu 20.04, 22.04 y 24.04 **⬅️ Recomendado**
 - Microsoft Windows 11 24H2, 22H2-SV2 y 23H2
@@ -210,10 +211,13 @@ nvcc --version
 - NCCL
   - NVIDIA Collective Communications Library
 
-
 ---
 
 ### Descarga e instalación
+
+---
+
+Podemos comprobar si los drivers de nvidia están instalados con el comando `nvidia-smi` (NVIDIA System Management Interface).
 
 ---
 
@@ -226,6 +230,8 @@ Instalación de drivers mediante `ubuntu-drivers` [nvidia-drivers-installation](
 Ubuntu 24.04
 
 ```bash
+sudo apt install build-essentials
+
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-ubuntu2404.pin
 sudo mv cuda-ubuntu2404.pin /etc/apt/preferences.d/cuda-repository-pin-600
 wget https://developer.download.nvidia.com/compute/cuda/12.8.0/local_installers/cuda-repo-ubuntu2404-12-8-local_12.8.0-570.86.10-1_amd64.deb
@@ -238,13 +244,13 @@ sudo cp /var/cuda-repo-ubuntu2404-12-8-local/cuda-*-keyring.gpg /usr/share/keyri
 WSL 2
 
 ```bash
+sudo apt install build-essentials
+
 wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin
 sudo mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
 wget https://developer.download.nvidia.com/compute/cuda/12.8.0/local_installers/cuda-repo-wsl-ubuntu-12-8-local_12.8.0-1_amd64.deb
 sudo dpkg -i cuda-repo-wsl-ubuntu-12-8-local_12.8.0-1_amd64.deb
 sudo cp /var/cuda-repo-wsl-ubuntu-12-8-local/cuda-*-keyring.gpg /usr/share/keyrings/
-
-sudo apt install build-essentials
 ```
 
 ---
@@ -259,12 +265,6 @@ sudo apt-get -y install cuda-toolkit-12-8
 ---
 
 Descarga e instalación de CUDA para Windows [CUDA Installation Guide for Microsoft Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/)
-
-
----
-
-Podemos comprobar si los drivers de nvidia están instalados con el comando `nvidia-smi` (NVIDIA System Management Interface).
-
 
 ---
 
@@ -294,23 +294,29 @@ Puede aparecer esta advertencia "groups: cannot find name for group ID 1000 I ha
 
 ## Docker compose
 
+Despliegue de soluciones con docker compose (orquestación).
+
 ```bash
 # Obtener más información
 docker compose [orden] --help
+
 # Contruir los contenedores
 docker compose build [servicio]
-# Parar las imágenes y eliminar los contenedores
+
+# Parar los servicios y eliminar los contenedores
 docker compose down [servicio]
-# El `-d` significa que es en segundo plano
-docker compose up [servicio] -d
+
+# Levantar el servicio
+docker compose up [servicio] -d # `-d` para segundo plano
 ```
 
 ---
 
-
 ## NVIDIA CATALOG
 
-[Catálogo de contenedores de NVIDIA](https://catalog.ngc.nvidia.com/)
+[Catálogo de contenedores de NVIDIA](https://catalog.ngc.nvidia.com/containers)
+
+![Catálogo](./assets/ngc-catalog.png)
 
 ---
 
@@ -320,6 +326,7 @@ docker compose up [servicio] -d
 services:
   runner_pytorch:
     container_name: ${PROJECT_NAME}_runner_pytorch
+    # image: nvcr.io/nvidia/pytorch:25.01-py3
     build:
       context: ./Apps/runner-pytorch
       dockerfile: Dockerfile
@@ -332,7 +339,7 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
-      - ./Apps/runner-pytorch/workspace:/workspace
+      - ./Apps/runner-pytorch/workspace_pytorch:/workspace_pytorch
     deploy:
       resources:
         reservations:
@@ -351,6 +358,7 @@ services:
 services:
   runner_tensorflow:
     container_name: ${PROJECT_NAME}_runner_tensorflow
+    # image: nvcr.io/nvidia/tensorflow:25.01-tf2-py3
     build:
       context: ./Apps/runner-tensorflow
       dockerfile: Dockerfile
@@ -358,12 +366,12 @@ services:
     stdin_open: true
     tty: true
     ipc: host
-    runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
-      - ./Apps/runner-tensorflow/workspace:/workspace
+      - ./Apps/runner-tensorflow/workspace_tensorflow:/workspace_tensorflow
+    runtime: nvidia
     deploy:
       resources:
         reservations:
@@ -381,15 +389,17 @@ services:
 La imagen `rapidsai/base` contiene una shell de `ipython` de manera predeterminada.
 La imagen `rapidsai/notebooks` contiene el servidor de `JupyterLab` de manera predeterminada.
 
-```md
+```
 24.12-cuda12.5-py3.12
-^ ^ ^
-| | Python version
-| |
-| CUDA version
-|
+^     ^        ^
+|     |        Python version
+|     CUDA version
 RAPIDS version
 ```
+
+---
+
+![bg contain](./assets/jupyter.png)
 
 ---
 
@@ -405,28 +415,21 @@ services:
       - 8888:8888
     stdin_open: true
     tty: true
-    ipc: host
-    runtime: nvidia
+    ipc: host # Memoria compartida
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
-      # Paquetes extra de conda a instalar
-      - EXTRA_CONDA_PACKAGES=jq
-      # Espera de 5 segundos tras instalar paquetes de conda.
-      - CONDA_TIMEOUT=5
-      # Paquetes extra de pip a instalar
-      - EXTRA_PIP_PACKAGES=tabulate
-      # Espera de 5 segundos tras instalar paquetes de pip.
-      - PIP_TIMEOUT=5
-    # Configuramos la memoria compartida
+      # - EXTRA_CONDA_PACKAGES=jq     # Paquetes extra de conda a instalar
+      # - CONDA_TIMEOUT=5             # Espera de 5 segundos tras instalar paquetes de conda.
+      # - EXTRA_PIP_PACKAGES=tabulate # Paquetes extra de pip a instalar
+      # - PIP_TIMEOUT=5               # Espera de 5 segundos tras instalar paquetes de pip.
     shm_size: "1gb"
     ulimits:
-      # Permitir el bloqueo ilimitado de la memoria
-      memlock: -1
-      # Tamaño de la pila en bytes
-      stack: 67108864
+      memlock: -1         # Permitir el bloqueo ilimitado de la memoria
+      stack: 67108864     # Tamaño de la pila en bytes
     volumes:
-      - ./Apps/runner-3-rapidsai/workspace:/workspace
+      - ./Apps/runner-3-rapidsai/workspace_rapidsai:/workspace_rapidsai
+    runtime: nvidia
     deploy:
       resources:
         reservations:
@@ -454,7 +457,21 @@ Esta tecnologia nos permite simplicar mucho la distribución de modelos para dis
 
 ---
 
-## Ejemplo de docker compose de un chat-gpt propio
+## Open WebUI
+
+Open-WebUI es una interfaz web de código abierto para interactuar con modelos de inteligencia artificial locales y en la nube. Suelen usarse con modelos LLM como Llama, Mistral o GPT a través de servidores como Ollama o LM Studio.
+
+[@open-webui/open-webui](https://github.com/open-webui/open-webui)
+
+[openwebui.com](https://openwebui.com/)
+
+---
+
+![Open WebUI](./assets/open-webui.png)
+
+---
+
+### Ejemplo de docker compose de un chat-gpt propio
 
 ```yaml
 services:
@@ -482,6 +499,7 @@ services:
       - local-ollama:/root/.ollama
     pull_policy: always
     # GPU support
+    runtime: nvidia
     deploy:
       resources:
         reservations:
@@ -512,9 +530,9 @@ Para traefik debemos añadir la redireccion al servicio, con ubuntu/debian `sudo
 
 ## Referencias
 
-- [CUDA GUIDE Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/).
-- [CUDA GUIDE Linux](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/).
-- [cuDNN](https://developer.nvidia.com/cudnn).
-- [OPEN WEB UI](https://docs.openwebui.com/).
+- [CUDA GUIDE Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/)
+- [CUDA GUIDE Linux](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)
+- [cuDNN](https://developer.nvidia.com/cudnn)
+- [OPEN WEB UI](https://docs.openwebui.com/)
 - [Catálogo de contenedores de NVIDIA](https://catalog.ngc.nvidia.com/)
 - [VSCODE Extensión Docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker)

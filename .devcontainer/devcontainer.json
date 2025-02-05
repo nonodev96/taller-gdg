@@ -3,11 +3,12 @@
 {
 	"name": "Custom pytorch",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"build": {
-		"dockerfile": "Dockerfile-pytorch",
-		// Argumentos con los que se contruye la imágen
-		"args": {} 
-	},
+	"image": "taller-gdg-runner_pytorch",
+	// "build": {
+	// 	"dockerfile": "Dockerfile-pytorch",
+	// 	// Argumentos con los que se contruye la imágen
+	// 	"args": {} 
+	// },
 
 	// Argumentos con los que se ejecuta el contenedor
 	"runArgs": [

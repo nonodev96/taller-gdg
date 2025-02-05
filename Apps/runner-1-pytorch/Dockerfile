@@ -7,7 +7,7 @@
 FROM nvcr.io/nvidia/pytorch:25.01-py3
 
 # Espacio de trabajo
-WORKDIR /workspace
+WORKDIR /workspace_pytorch
 
 # Instalación de dependencias
 RUN pip install --upgrade pip

@@ -14,7 +14,9 @@ services:
           devices:
             - driver: nvidia
               count: all
-              capabilities: [gpu]
+              capabilities: 
+                - gpu
+
   open-webui:
     image: ghcr.io/open-webui/open-webui:${DOCKER_WEBUI_TAG-main}
     container_name: ${PROJECT_NAME}_open-webui
@@ -33,6 +35,7 @@ services:
 
   runner_pytorch:
     container_name: ${PROJECT_NAME}_runner_pytorch
+    # image: nvcr.io/nvidia/pytorch:25.01-py3 
     build:
       context: ./Apps/runner-1-pytorch
       dockerfile: Dockerfile
@@ -44,7 +47,7 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
-      - ./Apps/runner-1-pytorch/workspace:/workspace
+      - ./Apps/runner-1-pytorch/workspace_pytorch:/workspace_pytorch:ro
     runtime: nvidia
     deploy:
       resources:
@@ -64,7 +67,8 @@ services:
       args:
         - ENV_SIMIDAT=simidat
     command: bash
-    user: "${UID}:${GID}" # Comentar en windows
+    # Comentar en windows
+    # user: "${UID}:${GID}" 
     stdin_open: true
     tty: true
     ipc: host
@@ -72,7 +76,7 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
-      - ./Apps/runner-2-tensorflow/workspace:/workspace
+      - ./Apps/runner-2-tensorflow/workspace_tensorflow:/workspace_tensorflow
     runtime: nvidia
     deploy:
       resources:
@@ -98,10 +102,10 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
-      - EXTRA_CONDA_PACKAGES=beautifulsoup4
+      # - EXTRA_CONDA_PACKAGES=beautifulsoup4
       # - CONDA_TIMEOUT=5
-      - EXTRA_PIP_PACKAGES=tabulate
-      - PIP_TIMEOUT=5
+      # - EXTRA_PIP_PACKAGES=tabulate
+      # - PIP_TIMEOUT=5
     # configuración de  RapidsAI
     pull_policy: always
     shm_size: 1gb
@@ -109,7 +113,7 @@ services:
       memlock: -1
       stack: 67108864
     volumes:
-      - ./Apps/runner-3-rapidsai/workspace:/workspace
+      - ./Apps/runner-3-rapidsai/workspace_rapidsai:/workspace_rapidsai
     deploy:
       resources:
         reservations:
