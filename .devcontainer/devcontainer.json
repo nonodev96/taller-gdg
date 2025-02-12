@@ -6,7 +6,7 @@
 	"image": "taller-gdg-runner_pytorch",
 	// "build": {
 	// 	"dockerfile": "Dockerfile-pytorch",
-	// 	// Argumentos con los que se contruye la imágen
+	// 	// Argumentos con los que se construye la imagen
 	// 	"args": {} 
 	// },
 

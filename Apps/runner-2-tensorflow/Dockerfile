@@ -13,7 +13,7 @@ FROM nvcr.io/nvidia/tensorflow:25.01-tf2-py3
 
 WORKDIR /workspace_tensorflow
 
-# Instalación de depenndencias
+# Instalación de dependencias
 RUN pip install --upgrade pip
 RUN apt update
 RUN apt install screen -y

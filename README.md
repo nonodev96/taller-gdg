@@ -32,8 +32,8 @@ Mostrar las capacidades de **docker** para la ejecución de modelos de IA, simpl
 
 ✅ Introducción a docker y contenedores especializados en IA
 ✅ Configuración de entornos con PyTorch, TensorFlow y herramientas clave
-✅ Conococer recursos de nvidia para el desarrollo y despliegue de modelos
-✅ Ejecución de modelos LLM en tu propio ordenador con Ollama
+✅ Conocer recursos de nvidia para el desarrollo y despliegue de modelos
+✅ Ejecución de modelos LLM en tu propio ordenador con ollama
 - Breve introducción a la seguridad en modelos de IA
 - Entender y manejar docker, gestionar recursos de un contenedor
 - Comprender la diferencia entre imágenes y contenedores
@@ -86,13 +86,13 @@ sudo apt-get update
 
 ---
 
-Instalación de los paquetes de la comunidad en ubunutu
+Instalación de los paquetes de la comunidad en ubuntu
 
 ```bash
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-Ejecución de una imágen para crear un contenedor
+Ejecución de una imagen para crear un contenedor
 
 ```bash
 sudo docker run hello-world
@@ -111,7 +111,7 @@ docker run hello-world # ya no hace falta ejecutar con permisos sudo
 
 Si te aparece el siguiente warning es posible que se deba a que has ejecutado un contenedor previamente con permisos de administrador, puedes corregirlo modificando los permisos de la carpeta `~/.docker/`
 
-```ansi
+```
 WARNING: Error loading config file: /home/user/.docker/config.json -
 stat /home/user/.docker/config.json: permission denied
 ```
@@ -132,18 +132,22 @@ Instalación de docker desktop en windows, siguiente, siguiente, siguiente.
 
 ---
 
+![Funcionamiento de docker](./assets/docker-architecture.png)
+
+---
+
 ## Creación de imágenes con docker
 
 Fichero `Dockerfile` genérico.
 
 ```dockerfile
-# Definición de la imágen de docker de la que partir
+# Definición de la imagen de docker de la que partir
 FROM ubuntu:22.04
 
 # Espacio de trabajo donde se iniciará el contenedor una vez creada la imagen
-WORKDIR /workspace
+WORKDIR /workspace_nonodev96
 
-# Ejemplo de comanndo durante la creación de la imagen
+# Ejemplo de comando para la creación de la imagen
 RUN sudo apt update
 RUN sudo apt install screen -y
 
@@ -158,16 +162,16 @@ CMD ["hello world!"]
 
 Instalación de CUDA, accedemos a la web para estudiar como instalar el kit de desarrollo de CUDA de nvidia, podemos descargar los drivers desde [CUDA Toolkit 12.8](https://developer.nvidia.com/cuda-downloads)
 
-Para ver todo el listado de productos de nvidia con soporte de cuda podemos acceder a la web [cuda-gpus](https://developer.nvidia.com/cuda-gpus).
+Para ver todo el listado de productos de nvidia con soporte de CUDA podemos acceder a la web [cuda-gpus](https://developer.nvidia.com/cuda-gpus).
 
 - [CUDA GUIDE WINDOWS](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/)
 - [CUDA GUIDE LINUX](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)
 
 ---
 
-### Sitemas operativos
+### Sistemas operativos
 
-Para Windows podemos abri el panel de dispositivos con `control /name Microsoft.DeviceManager` > `Adaptadores de pantalla`.
+Para Windows podemos abrir el panel de dispositivos con `control /name Microsoft.DeviceManager` > `Adaptadores de pantalla`.
 
 Con Debian y derivados podemos ver la gráfica con `lspci | grep VGA` o con el paquete `hwinfo` instalando (`sudo apt install hwinfo`) y comprobando el hardware (`sudo hwinfo --gfxcard`).
 
@@ -180,18 +184,20 @@ sudo hwinfo --gfxcard
 
 ---
 
-Para ambos casos windows o linux, se instala la orden `nvidia-smi` que nos permite ver que hardware tiene nuestro equipo y como lo está usando. En la parte superior nos indica la versión máxima soportada por nuestra tarjeta, no indica la versión instalada.
+Para ambos casos windows o linux, se instala la orden `nvidia-smi` (NVIDIA System Management Interface).
+
+Este nos permite ver que hardware tiene nuestro equipo y como lo está usando. En la parte superior nos indica la versión máxima soportada por los drivers de nuestra tarjeta, no indica la versión instalada.
 
 ```bash
 nvidia-smi
-nvcc --version
+nvcc --version # Este es el compilador, no viene con los drivers
 ```
 
 ---
 
-### Sistemas operativos compatibles con CUDA:
+### Sistemas operativos compatibles con el toolkit de CUDA:
 
-- Ubuntu 20.04, 22.04 y 24.04 **⬅️ Recomendado**
+- Ubuntu 20.04, **22.04** y 24.04 **⬅️ Recomendado**
 - Microsoft Windows 11 24H2, 22H2-SV2 y 23H2
 - Microsoft Windows 10 22H2
 - Microsoft Windows WSL 2
@@ -202,22 +208,20 @@ nvcc --version
 
 ### Paquetes que incluye
 
+⚠️ Compatibilidad con los distintos sistemas operativos [cuda-toolkit-release-notes](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html)
+
 - CUDA
   - CUDA Driver
   - CUDA Runtime (cudart)
   - CUDA Math Library (math.h)
+  - etc
 - cuDNN
   - CUDA Deep Neural Network
-- NCCL
-  - NVIDIA Collective Communications Library
+- ⚠️ nvidia-container-toolkit (Este no lo incluye 👍 )
 
 ---
 
 ### Descarga e instalación
-
----
-
-Podemos comprobar si los drivers de nvidia están instalados con el comando `nvidia-smi` (NVIDIA System Management Interface).
 
 ---
 
@@ -259,13 +263,31 @@ Tras la actualización de paquetes podemos instalar, instalamos con `apt`, es po
 
 ```bash
 sudo apt-get update
+
+# Repositorio oficial de nvidia
 sudo apt-get -y install cuda-toolkit-12-8
-sudo apt-get -y install nvidia-cuda-toolkit
+
+# Repositorio oficial de ubuntu (es más sencillo instalar nvcc en WSL)
+sudo apt-get -y install nvidia-cuda-toolkit 
 ```
 
 ---
 
-Descargar repositorio de `nvidia-container-toolkit`
+### Comprobar la instalación
+
+```bash
+nvcc --version
+
+ls /usr/local/ | grep cuda
+cd /etc/alternatives/cuda 
+realpath $(pwd) # Con realpath podéis resolver todos los enlaces simbólicos
+```
+
+---
+
+## Instalación del runtime para GPUs de nvidia
+
+Descargar repositorio de `nvidia-container-toolkit` [container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 
 ```bash
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
@@ -288,6 +310,8 @@ sudo systemctl restart docker
 
 Descarga e instalación de CUDA para Windows [CUDA Installation Guide for Microsoft Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/)
 
+Siguiente, siguiente, siguiente. (viene con el toolkit)
+
 ---
 
 ## Docker NVIDIA
@@ -299,12 +323,23 @@ Descarga e instalación de CUDA para Windows [CUDA Installation Guide for Micros
 Ejemplo básico
 
 ```bash
-docker run --gpus all --rm -ti nvcr.io/nvidia/pytorch:24.04-py3
+docker run --gpus all --rm -ti nvcr.io/nvidia/pytorch:25.01-py3
 # Configuración de las Gráficas
 docker run --gpus 2 ...
 docker run --gpus "device=1,2" ...
 docker run --gpus "device=UUID-ABCDEF,1" ...
 ```
+
+---
+
+## Errores comunes
+
+```bash
+docker run --gpus all -it --rm nvcr.io/nvidia/pytorch:25.01-py3
+> docker: Error response from daemon: could not select device driver "" with capabilities: [[gpu]].
+```
+
+Hay que revisar la instalación del `nvidia-container-toolkit`
 
 ---
 
@@ -322,7 +357,7 @@ Despliegue de soluciones con docker compose (orquestación).
 # Obtener más información
 docker compose [orden] --help
 
-# Contruir los contenedores
+# Construir los contenedores
 docker compose build [servicio]
 
 # Parar los servicios y eliminar los contenedores
@@ -353,6 +388,11 @@ docker pull ollama/ollama
 docker pull ghcr.io/open-webui/open-webui:main
 ```
 
+```bash
+# https://hub.docker.com/r/nvidia/cuda
+docker pull nvidia/cuda:11.8.0-base-ubuntu22.04
+```
+
 ---
 
 ## NVIDIA-Pytorch
@@ -361,20 +401,20 @@ docker pull ghcr.io/open-webui/open-webui:main
 services:
   runner_pytorch:
     container_name: ${PROJECT_NAME}_runner_pytorch
-    # image: nvcr.io/nvidia/pytorch:25.01-py3
-    build:
-      context: ./Apps/runner-pytorch
-      dockerfile: Dockerfile
+    image: nvcr.io/nvidia/pytorch:25.01-py3
+    # build:
+    #   context: ./Apps/runner-pytorch
+    #   dockerfile: Dockerfile
     command: bash
     stdin_open: true
     tty: true
-    ipc: host # Para compartir memoria entre procesos en multihilo
-    runtime: nvidia
+    ipc: host # Para compartir memoria
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
       - ./Apps/runner-pytorch/workspace_pytorch:/workspace_pytorch
+    runtime: nvidia
     deploy:
       resources:
         reservations:
@@ -425,11 +465,11 @@ La imagen `rapidsai/base` contiene una shell de `ipython` de manera predetermina
 La imagen `rapidsai/notebooks` contiene el servidor de `JupyterLab` de manera predeterminada.
 
 ```
-24.12-cuda12.5-py3.12
-^     ^        ^
-|     |        Python version
-|     CUDA version
 RAPIDS version
+|     CUDA version
+|     |        Python version
+v     v        v
+24.12-cuda12.5-py3.12
 ```
 
 ---
@@ -486,7 +526,7 @@ services:
 
 Ollama es un gestor de modelos LLM que permite descargar, ejecutar y desplegar modelo LLM fácilmente mediante un servidor que distribuye una [API](https://github.com/ollama/ollama/blob/main/docs/api.md).
 
-Esta tecnologia nos permite simplicar mucho la distribución de modelos para distintos usos.
+Esta tecnología nos permite simplificar la distribución de modelos para distintos usos.
 
 ![OLLAMA](./assets/ollama.png)
 
@@ -558,7 +598,7 @@ volumes:
 
 ## Traefik
 
-Para traefik debemos añadir la redireccion al servicio, con ubuntu/debian `sudo nano /etc/hosts` y para Windows abrir editor de texto con permisos de administrador el fichero `C:\Windows\System32\drivers\etc\hosts` y añadir la
+Para traefik debemos añadir la redirección al servicio, con ubuntu/debian `sudo nano /etc/hosts` y para Windows abrir el fichero `C:\Windows\System32\drivers\etc\hosts` con el editor de texto dando permisos de administrador y añadir los siguientes DNS.
 
 ```bash
 # Añadimos el host
@@ -572,11 +612,11 @@ Para traefik debemos añadir la redireccion al servicio, con ubuntu/debian `sudo
 - [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit)
   - [CUDA GUIDE Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/)
   - [CUDA GUIDE Linux](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)
+- [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- [Catálogo de contenedores de NVIDIA](https://catalog.ngc.nvidia.com/)
+- [VSCODE Extensión Docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker)
 - [cuDNN](https://developer.nvidia.com/cudnn)
 - [cuBLAS](https://developer.nvidia.com/cublas)
 - [cuSPARSE](https://developer.nvidia.com/cusparse)
-- [Catálogo de contenedores de NVIDIA](https://catalog.ngc.nvidia.com/)
-- [VSCODE Extensión Docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker)
-- [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 - [OPEN WEB UI](https://docs.openwebui.com/)
 - [ollama](https://ollama.com/)
