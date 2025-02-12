@@ -285,6 +285,20 @@ realpath $(pwd) # Con realpath podéis resolver todos los enlaces simbólicos
 
 ---
 
+Descarga e instalación de CUDA para Windows [CUDA Installation Guide for Microsoft Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/)
+
+Viene con la instalación del `container-toolkit` en el WSL predeterminado.
+
+Instalación: Siguiente, siguiente, siguiente. 
+
+---
+
+## Docker NVIDIA
+
+![bg right contain](./assets/docker-nvidia-toolkit.png)
+
+---
+
 ## Instalación del runtime para GPUs de nvidia
 
 Descargar repositorio de `nvidia-container-toolkit` [container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
@@ -296,8 +310,6 @@ curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dear
     sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
 ```
 
-----
-
 ```bash
 sudo sed -i -e '/experimental/ s/^#//g' /etc/apt/sources.list.d/nvidia-container-toolkit.list
 sudo apt-get update
@@ -305,18 +317,6 @@ sudo apt-get install -y nvidia-container-toolkit
 sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
-
----
-
-Descarga e instalación de CUDA para Windows [CUDA Installation Guide for Microsoft Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/)
-
-Siguiente, siguiente, siguiente. (viene con el toolkit)
-
----
-
-## Docker NVIDIA
-
-![bg right contain](./assets/docker-nvidia-toolkit.png)
 
 ---
 
@@ -380,7 +380,7 @@ docker compose up [servicio] -d # `-d` para segundo plano
 ## Descargar imágenes
 
 ```bash
-docker pull nvcr.io/nvidia/pytorch:25.01-py3
+docker pull nvcr.io/nvidia/pytorch:25.01-py3      # 6 minutos aproximadamente
 docker pull nvcr.io/nvidia/tensorflow:25.01-tf2-py3
 docker pull nvcr.io/nvidia/rapidsai/notebooks:24.12-cuda12.5-py3.12
 
@@ -427,6 +427,13 @@ services:
 
 ---
 
+<div style="display: flex; justify-content: space-around;">
+  <img src="./assets/logs_pytorch.png" width="60%" />
+  <img src="./assets/test_pytorch.png" width="30%" />
+</div>
+
+---
+
 ## NVIDIA-TensorFlow
 
 ```yaml
@@ -456,6 +463,13 @@ services:
               capabilities:
                 - gpu
 ```
+
+---
+
+<div style="display: flex; justify-content: space-around;">
+  <img src="./assets/logs_tensorflow.png" width="30%" />
+  <img src="./assets/test_tensorflow.png" width="60%" />
+</div>
 
 ---
 
@@ -620,3 +634,21 @@ Para traefik debemos añadir la redirección al servicio, con ubuntu/debian `sud
 - [cuSPARSE](https://developer.nvidia.com/cusparse)
 - [OPEN WEB UI](https://docs.openwebui.com/)
 - [ollama](https://ollama.com/)
+
+---
+
+## Consideraciones en Windows
+
+Puedes tener distintos docker en windows, asegúrate de estar usando el adecuado, pues la imágenes ocuparan mucha memoria
+
+```bash
+C:\Users\nono_>wsl.exe --list
+Distribuciones de subsistema de Windows para Linux:
+Ubuntu (predeterminado)
+Ubuntu-24.04
+docker-desktop # <-- Puedes desactivarlo, pero pierdes el puente del runtime
+```
+
+```bash
+C:\Users\nono_>wsl.exe --shutdown
+```
