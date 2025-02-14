@@ -21,8 +21,25 @@ _footer: 'nonodev96'
 
 ## Quien soy
 
+<style scoped>
+
+.instituciones {
+  display: flex; 
+  justify-content: space-around; 
+  align-items: stretch;
+}
+
+</style>
 
 Soy Antonio Mudarra Machuca investigador en la Universidad de Jaén en el grupo de investigación SIMIDAT.
+
+![h:128px](./assets/gdg-jaén.png)
+
+<div class="instituciones">
+  <img src="./assets/simidat.png" width="25%" />
+  <img src="./assets/uja.png" width="25%" />
+  <img src="./assets/dasci.png" width="25%" />
+</div>
 
 ---
 
