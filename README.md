@@ -48,12 +48,12 @@ Soy Antonio Mudarra Machuca investigador en la Universidad de Jaén en el grupo 
 Mostrar las capacidades de **docker** para la ejecución de modelos de IA, simplificando todo el proceso de configuración de distintos entornos de desarrollo y ejecución.
 
 ✅ Introducción a docker y contenedores especializados en IA
+✅ Comprender la diferencia entre imágenes y contenedores
 ✅ Configuración de entornos con PyTorch, TensorFlow y herramientas clave
 ✅ Conocer recursos de nvidia para el desarrollo y despliegue de modelos
 ✅ Ejecución de modelos LLM en tu propio ordenador con ollama
 - Breve introducción a la seguridad en modelos de IA
 - Entender y manejar docker, gestionar recursos de un contenedor
-- Comprender la diferencia entre imágenes y contenedores
 - Conocer otras herramientas como ollama o traefik
 
 ---
@@ -251,7 +251,7 @@ Instalación de drivers mediante `ubuntu-drivers` [nvidia-drivers-installation](
 Ubuntu 24.04
 
 ```bash
-sudo apt install build-essentials
+sudo apt update && sudo apt install -y build-essential
 
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-ubuntu2404.pin
 sudo mv cuda-ubuntu2404.pin /etc/apt/preferences.d/cuda-repository-pin-600
@@ -265,7 +265,7 @@ sudo cp /var/cuda-repo-ubuntu2404-12-8-local/cuda-*-keyring.gpg /usr/share/keyri
 WSL 2
 
 ```bash
-sudo apt install build-essentials
+sudo apt update && sudo apt install -y build-essential
 
 wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin
 sudo mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
@@ -283,6 +283,9 @@ sudo apt-get update
 
 # Repositorio oficial de nvidia
 sudo apt-get -y install cuda-toolkit-12-8
+
+# export PATH="/usr/local/cuda-12.8/bin:$PATH"
+# export LD_LIBRARY_PATH="/usr/local/cuda-12.8/lib64:$LD_LIBRARY_PATH"
 
 # Repositorio oficial de ubuntu (es más sencillo instalar nvcc en WSL)
 sudo apt-get -y install nvidia-cuda-toolkit 
@@ -345,6 +348,8 @@ docker run --gpus all --rm -ti nvcr.io/nvidia/pytorch:25.01-py3
 docker run --gpus 2 ...
 docker run --gpus "device=1,2" ...
 docker run --gpus "device=UUID-ABCDEF,1" ...
+
+docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 --rm -ti nvcr.io/nvidia/pytorch:25.01-py3
 ```
 
 ---
