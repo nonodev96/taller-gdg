@@ -60,12 +60,12 @@ services:
 
   runner_tensorflow:
     container_name: ${PROJECT_NAME}_runner_tensorflow
-    image: nvcr.io/nvidia/tensorflow:25.01-tf2-py3
-    # build:
-    #   context: ./Apps/runner-2-tensorflow
-    #   dockerfile: Dockerfile
-    #   args:
-    #     - ENV_SIMIDAT=simidat
+    # image: nvcr.io/nvidia/tensorflow:25.01-tf2-py3
+    build:
+      context: ./Apps/runner-2-tensorflow
+      dockerfile: Dockerfile
+      args:
+        - ENV_SIMIDAT=simidat
     command: bash
     # Comentar en windows
     # user: "${UID}:${GID}" 

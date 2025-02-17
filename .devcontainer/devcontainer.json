@@ -3,24 +3,31 @@
 {
 	"name": "Custom pytorch",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "taller-gdg-runner_pytorch",
-	// "build": {
-	// 	"dockerfile": "Dockerfile-pytorch",
-	// 	// Argumentos con los que se construye la imagen
-	// 	"args": {} 
-	// },
-
+	// "image": "taller-gdg-runner_pytorch",
+	"build": {
+		"dockerfile": "Dockerfile-pytorch",
+		// Argumentos con los que se construye la imagen
+		"args": {}
+	},
 	// Argumentos con los que se ejecuta el contenedor
 	"runArgs": [
 		"--gpus=all",
-		"--ipc=host"
+		"--ipc=host",
+		"--ulimit",
+		"memlock=-1",
+		"--ulimit",
+		"stack=67108864"
 	],
+	"containerEnv": {
+		"TALLER_TOKEN": "${localEnv:TALLER_TOKEN}"
+	},
+	"remoteEnv": {
+		"PATH": "${containerEnv:PATH}:/some/other/path"
+	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
-
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
-
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
 	"postCreateCommand": [
@@ -30,6 +37,14 @@
 	// "customizations": {},
 	"customizations": {
 		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "zsh",
+				"terminal.integrated.profiles.linux": {
+					"zsh": {
+						"path": "/bin/zsh"
+					}
+				}
+			},
 			"extensions": [
 				"ms-vscode.makefile-tools",
 				"ms-azuretools.vscode-docker",
@@ -41,8 +56,19 @@
 				"ms-toolsai.jupyter-keymap",
 				"ms-toolsai.jupyter-renderers",
 				"ms-toolsai.vscode-jupyter-slideshow",
-				"ms-toolsai.tensorboard"
+				"ms-toolsai.tensorboard",
+				"MS-CEINTL.vscode-language-pack-es"
 			]
+		}
+	},
+	"mounts": [
+		"source=${env:USERPROFILE}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
+		"source=${env:USERPROFILE}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
+	],
+	"features": {
+		"ghcr.io/nils-geistmann/devcontainers-features/zsh:0": {},
+		"ghcr.io/devcontainers-extra/features/zsh-plugins:0": {
+			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions.git"
 		}
 	}
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.

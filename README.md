@@ -558,6 +558,55 @@ services:
 
 ---
 
+Debemos instalar la [extensión](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) de Microsoft para poder conectarnos a los contenedores mediante VSCode.
+
+<div style="display: flex; justify-content: space-around;">
+  <img src="./assets/remote-containers-readme.gif" width="75%" />
+  <img src="./assets/test_tensorflow.png" width="60%" />
+</div>
+
+---
+
+Creación del contenedor de desarrollo.
+
+```bash
+cd ./.devcontainer
+docker build --no-cache 
+             --tag i_taller_devcontainer
+             --file ./Dockerfile-pytorch .
+docker run --gpus=all 
+           --ipc=host
+           --ulimit memlock=-1
+           --ulimit stack=67108864 
+           -it -d i_taller_devcontainer 
+```
+
+---
+
+- `containerEnv`: Para definir variables directamente en el contenedor.
+  - Definir una variable solo en el contenedor
+- `remoteEnv`: Para pasar variables desde el host al contenedor.
+  - Usar una variable definida en el host	`remoteEnv`
+  - Configurar valores secretos sin guardarlos en el **DevContainer**
+
+---
+
+```bash
+# GUARDAR ENV EN WINDOWS
+[System.Environment]::SetEnvironmentVariable("TALLER_TOKEN", "mi_token_personal".Trim(), "User")
+# OBTERNER ENV EN WINDOWS
+[System.Environment]::GetEnvironmentVariable("TALLER_TOKEN", "User")
+```
+
+```bash
+# GUARDAR ENV EN Linux
+export TALLER_TOKEN=mi_token_personal
+# OBTERNER ENV EN Linux
+echo $TALLER_TOKEN
+```
+
+---
+
 ## OLLAMA
 
 Ollama es un gestor de modelos LLM que permite descargar, ejecutar y desplegar modelo LLM fácilmente mediante un servidor que distribuye una [API](https://github.com/ollama/ollama/blob/main/docs/api.md).
