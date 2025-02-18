@@ -1,0 +1,168 @@
+tcp:
+
+  # ======================================
+  # Middlewares TCP
+  # ======================================
+  middlewares:
+    ip-allow-list-admin-TCP:
+      ipWhiteList:
+        sourceRange:
+          - 192.168.1.100
+
+
+  # ======================================
+  # Routers TCP
+  # ======================================
+  routers:
+    minecraft:
+      rule: "HostSNI(`*`)"
+      entryPoints:
+        - minecraft
+      middlewares:
+        - ip-allow-list-admin-TCP@file
+      service: "minecraft-svc-TCP"
+
+  # ======================================
+  # Services TCP
+  # ======================================
+  services:
+    minecraft-svc-TCP:
+      loadBalancer:
+        servers:
+          - address: "minecraft:25565"
+
+http:
+  # ======================================
+  # Middlewares
+  # ======================================
+  middlewares:
+    sablier-whoami:
+      plugin:
+        plugin-traefik-sablier:
+          sablierUrl: http://traefik_sablier:10000
+          names: taller_gdg_traefik_whoami
+          group:
+            default # Will wake up all containers with label sablier.group=whoami
+            # - whoami
+          sessionDuration: 10m
+          dynamic:
+            # (Optional) Defaults to the middleware name
+            displayName: Cargando whoami
+            # (Optional) Set to true or false to show details specifcally for this middleware, unset to use Sablier server defaults
+            showDetails: true
+            # (Optional) The theme to use
+            theme: hacker-terminal
+            # (Optional) The loading page refresh frequency
+            refreshFrequency: 5s
+
+    # Plugins AUTH
+    auth-github-oauth:
+      plugin:
+        plugin-traefik-github-oauth:
+          logLevel: debug
+          authPath: /_auth
+          apiBaseUrl: https://traefik-github.nonodev96.dev
+          whitelist:
+            logins:
+              - nonodev96
+
+    # Plugins WAF
+    waf-modsecurity:
+      plugin:
+        plugin-traefik-modsecurity:
+          maxBodySize: 10485760
+          modSecurityUrl: "http://traefik_waf:80"
+
+    # Middlewares
+    ip-allow-list-admin:
+      ipAllowList:
+        sourceRange:
+          - 192.168.1.100
+
+    # Middlewares
+    compress:
+      compress:
+        minResponseBodyBytes: 1200
+        excludedContentTypes:
+          - text/event-stream
+
+    # ======================================
+    # Chain Middlewares
+    # ======================================
+    secure-private:
+      chain:
+        middlewares:
+          - ip-allow-list-admin
+          - auth-github-oauth
+          - waf-modsecurity
+          - compress
+
+    secure-protected:
+      chain:
+        middlewares:
+          - auth-github-oauth
+          - waf-modsecurity
+          - compress
+
+    secure-public:
+      chain:
+        middlewares:
+          - waf-modsecurity
+          - compress
+
+  # ======================================
+  # Routers
+  # ======================================
+  routers:
+    traefik-dashboard:
+      rule: "Host(`traefik.nonodev96.dev`)"
+      service: "api@internal"
+      entryPoints:
+        - traefik
+        - websecure
+      tls:
+        domains:
+          - main: "nonodev96.dev"
+            sans:
+              - "*.nonodev96.dev"
+    
+    uptime:
+      rule: "Host(`uptime.nonodev96.dev`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - secure-private@file
+      service: "uptime-svc"
+      tls: {}
+
+    whoami:
+      rule: "Host(`whoami.nonodev96.dev`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - whoami-sablier@file
+        - secure-public@file
+      service: "whoami-svc"
+      tls: {}
+
+  # ======================================
+  # Services
+  # ======================================
+  services:
+    whoami-svc:
+      loadBalancer:
+        servers:
+          - url: "http://traefik_whoami:80"
+
+    uptime-svc:
+      loadBalancer:
+        servers:
+          - url: "http://traefik_uptime_kuma:3001"
+
+tls:
+  options:
+    default:
+      sniStrict: true
+  certificates:
+    - certFile: "/etc/certs/nonodev96-cert.pem"
+      keyFile: "/etc/certs/nonodev96-key.pem"

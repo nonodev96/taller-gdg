@@ -552,6 +552,26 @@ services:
 
 ---
 
+## Ejemplo para la creación de un contenedor de desarrollo.
+
+```bash
+cd ./.devcontainer
+docker build --no-cache 
+             --tag i_taller_devcontainer
+             --file ./Dockerfile-pytorch .
+
+docker run --gpus=all 
+           --ipc=host
+           --ulimit memlock=-1
+           --ulimit stack=67108864 
+           --name runner_dev_pytorch
+           -it -d i_taller_devcontainer 
+```
+
+> Podemos conectarnos mediante el entorno de desarrollo de vscode.
+
+---
+
 ## DEV Container
 
 ![DevContainers](./assets/architecture-containers.png)
@@ -562,26 +582,72 @@ Debemos instalar la [extensión](https://marketplace.visualstudio.com/items?item
 
 <div style="display: flex; justify-content: space-around;">
   <img src="./assets/remote-containers-readme.gif" width="75%" />
-  <img src="./assets/test_tensorflow.png" width="60%" />
 </div>
 
 ---
 
-Creación del contenedor de desarrollo.
+## Fichero devcontainer.json
 
-```bash
-cd ./.devcontainer
-docker build --no-cache 
-             --tag i_taller_devcontainer
-             --file ./Dockerfile-pytorch .
-docker run --gpus=all 
-           --ipc=host
-           --ulimit memlock=-1
-           --ulimit stack=67108864 
-           -it -d i_taller_devcontainer 
+Desde la carpeta `./.devcontainer` editamos el fichero `devcontainer.json`, este nos permite definir el comportamiento del contenedor y del IDE. [Documentación containers.dev](https://containers.dev/implementors/json_reference/). 
+
+```json
+{
+  "name": "Dev PyTorch",
+  // "image": "taller-gdg-runner_pytorch",
+  // Argumentos con los que se construye la imagen
+  "build": {
+		"dockerfile": "Dockerfile-pytorch",
+		"args": {
+      "DEVCONTAINER_CLI": "true"
+    }
+	},
+  // Argumentos con los que se ejecuta el contenedor
+	"runArgs": [
+		"--gpus=all",
+		"--ipc=host",
+		"--ulimit",
+		"memlock=-1",
+		"--ulimit",
+		"stack=67108864"
+	],
+  "containerEnv": {
+		"TALLER_TOKEN": "${localEnv:TALLER_TOKEN}"
+	},
+	"remoteEnv": {
+		"PATH": "${containerEnv:PATH}:/some/other/path"
+	},
+}
 ```
 
 ---
+
+### Variables en devcontainer.json
+
+| Variable                              | Descripción |
+| ------------------------------------- | ----------- |
+| `${localEnv:VARIABLE_NAME}`           |             |
+| `${containerEnv:VARIABLE_NAME}`       |             |
+| `${localWorkspaceFolder}`             |             |
+| `${containerWorkspaceFolder}`         |             |
+| `${localWorkspaceFolderBasename}`     |             |
+| `${containerWorkspaceFolderBasename}` |             |
+| `${devcontainerId}`                   |             |
+
+---
+
+## Docker devcontainer en un servidor remoto
+
+Desde el fichero `./.vscode/settings.json` debemos modificar el host, también debemos tener configurado la clave pública en el servidor. Debe estar configurado el agente SSH.
+
+```json
+"docker.environment": {
+    "DOCKER_HOST": "ssh://your-remote-user@your-remote-machine-or-ip-here"
+}
+```
+
+---
+
+### Configuración del contenedor y del host.
 
 - `containerEnv`: Para definir variables directamente en el contenedor.
   - Definir una variable solo en el contenedor
@@ -591,17 +657,19 @@ docker run --gpus=all
 
 ---
 
+### Variables de entorno
+
 ```bash
 # GUARDAR ENV EN WINDOWS
 [System.Environment]::SetEnvironmentVariable("TALLER_TOKEN", "mi_token_personal".Trim(), "User")
-# OBTERNER ENV EN WINDOWS
+# OBTENER ENV EN WINDOWS
 [System.Environment]::GetEnvironmentVariable("TALLER_TOKEN", "User")
 ```
 
 ```bash
 # GUARDAR ENV EN Linux
 export TALLER_TOKEN=mi_token_personal
-# OBTERNER ENV EN Linux
+# OBTENER ENV EN Linux
 echo $TALLER_TOKEN
 ```
 

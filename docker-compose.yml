@@ -93,12 +93,12 @@ services:
     #build:
     #  context: ./Apps/runner-3-rapidsai
     #  dockerfile: Dockerfile
+    pull_policy: always
     ports:
       - 8888:8888
     stdin_open: true
     tty: true
-    ipc: host
-    runtime: nvidia
+    # configuración de  RapidsAI
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
@@ -106,14 +106,14 @@ services:
       # - CONDA_TIMEOUT=5
       # - EXTRA_PIP_PACKAGES=tabulate
       # - PIP_TIMEOUT=5
-    # configuración de  RapidsAI
-    pull_policy: always
+    ipc: host
     shm_size: 1gb
     ulimits:
       memlock: -1
       stack: 67108864
     volumes:
       - ./Apps/runner-3-rapidsai/workspace_rapidsai:/workspace_rapidsai
+    runtime: nvidia
     deploy:
       resources:
         reservations:
@@ -122,6 +122,184 @@ services:
               count: 1
               capabilities: 
                 - gpu
+
+  # ======================================
+  # Servicios de soporte
+  # Parte 2 del taller 
+  # EXTRA: Traefik
+  # ======================================
+  
+  traefik:
+    container_name: "${PROJECT_NAME}_traefik"
+    image: traefik:v3.2
+    restart: on-failure:1
+    environment:
+      TZ: ${TIMEZONE}
+    ports:
+      # Traefik
+      # - "8080:8080"
+      # http(s)
+      - "80:80"
+      - "443:443"
+      # Minecraft
+      - "25565:25565/tcp"
+      # WireGuard
+      # - 51820:51820/udp
+      # - 51821:51821/tcp
+      # - target: 51820
+      #   published: 51820
+      #   protocol: udp
+      #   mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./Config/traefik-static.yml:/etc/traefik/traefik.yml:ro
+      - ./Config/traefik-dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./Config/certs:/etc/certs:ro
+      - /home/nonodev96/.local/share/mkcert/rootCA-key.pem:/etc/ssl/certs/rootCA-key.pem
+      - /home/nonodev96/.local/share/mkcert/rootCA.pem:/etc/ssl/certs/rootCA.pem          
+    networks:
+      - proxy
+      - backend
+    labels:
+      - traefik.http.routers.${PROJECT_NAME}_traefik.tls=true
+      - traefik.http.routers.${PROJECT_NAME}_traefik.entrypoints=traefik
+      - traefik.http.routers.${PROJECT_NAME}_traefik.service=api@internal
+
+  dummy:
+    container_name: "${PROJECT_NAME}_dummy"
+    image: traefik/whoami
+    networks:
+      - backend
+
+  traefik_sablier:
+    container_name: "${PROJECT_NAME}_traefik_sablier"
+    image: acouvreur/sablier:1.8.0-beta.8
+    networks:
+      - proxy
+      - backend
+    depends_on:
+      - traefik
+    command:
+      - start
+      - --provider.name=docker
+      - --logging.level=trace
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  traefik_waf:
+    container_name: "${PROJECT_NAME}_traefik_waf"
+    image: owasp/modsecurity-crs:4.9.0-apache-202412120712
+    depends_on:
+      - dummy
+    environment:
+      TZ: ${TIMEZONE}
+      PARANOIA: 1
+      ANOMALY_INBOUND: 15
+      ANOMALY_OUTBOUND: 5
+      BACKEND: "http://dummy"
+      ERRORLOG: "/var/log/error.log"
+      ACCESSLOG: "/var/log/access.log"
+    networks:
+      - backend
+      # - proxy
+    volumes:
+      # - ./logs/modsecurity/modsec_audit.log:/var/log/modsec_audit.log
+      # - ./logs/modsecurity/modsec_error.log:/var/log/modsec_error.log
+      - ./Config/ModSecurity/RULES.conf:/etc/modsecurity.d/owasp-crs/rules/RULES.conf
+
+  traefik_github_oauth_server:
+    container_name: "${PROJECT_NAME}_traefik_github_oauth_server"
+    image: luizfonseca/traefik-github-oauth-server
+    depends_on:
+      - traefik
+    environment:
+      GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID}
+      GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET}
+      API_BASE_URL: "https://traefik-github.nonodev96.dev"
+      DEBUG_MODE: true
+      LOG_LEVEL: "debug"
+    networks:
+      - proxy      
+    labels:
+      - traefik.enable=true
+
+  traefik_uptime_kuma:
+    container_name: ${PROJECT_NAME}_uptime_kuma
+    image: louislam/uptime-kuma:latest
+    depends_on: 
+      - traefik
+    networks:
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./DataStorage/uptime-kuma/data:/app/data
+    labels:
+      - traefik.enable=true
+
+  traefik_whoami:
+    image: traefik/whoami
+    container_name: "${PROJECT_NAME}_whoami"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+      - proxy
+    labels:
+      - traefik.enable=true
+
+  photoprism:
+    container_name: ${PROJECT_NAME}_photoprism
+    image: photoprism/photoprism:latest
+    environment:
+      PHOTOPRISM_SITE_URL: "https://photoprism.nonodev96.dev/"
+      PHOTOPRISM_DISABLE_TLS: "false"
+      PHOTOPRISM_ADMIN_USERNAME: ${PHOTOPRISM_ADMIN_USERNAME}
+      PHOTOPRISM_ADMIN_PASSWORD: ${PHOTOPRISM_ADMIN_PASSWORD}
+    networks:
+      - backend
+      - proxy
+    volumes:
+      - ./DataStorage/photoprism/originals:/photoprism/originals
+      - ./DataStorage/photoprism/storage:/photoprism/storage
+    labels:
+      - traefik.enable=true
+
+  minecraft:
+    container_name: "${PROJECT_NAME}_minecraft-server"
+    image: itzg/minecraft-server:latest
+    tty: true
+    stdin_open: true
+    # ports:
+    #   - "25565:25565"
+    environment:
+      TZ: ${TIMEZONE}
+      EULA: TRUE
+      DEBUG: TRUE
+      SERVER_NAME: "TALLER GDG"
+      OPS: nonodev96
+      WHITELIST: nonodev96
+      ENABLE_WHITELIST: TRUE
+      ENFORCE_WHITELIST: TRUE
+      OVERRIDE_WHITELIST: true
+    networks:
+      - proxy
+    volumes:
+      - ./DataStorage/minecraft-server:/data
+    labels:
+      - traefik.enable=true
+
+networks:
+  proxy:
+    # Esto significa que ha sido creada fuera del docker compose
+    external: false
+    # Para uso externo
+    internal: false
+
+  backend:
+    # Esto significa que ha sido creada fuera del docker compose
+    external: false
+    # Para uso interno
+    internal: true
 
 volumes:
   local-ollama:

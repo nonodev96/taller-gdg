@@ -1,0 +1,94 @@
+core:
+  defaultRuleSyntax: v3
+
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+api:
+  dashboard: true
+  insecure: false
+
+experimental:
+  plugins:
+    # AUTH
+    plugin-traefik-github-oauth:
+      moduleName: "github.com/luizfonseca/traefik-github-oauth-plugin"
+      version: "v0.3.2"
+    
+    # WAF
+    plugin-traefik-modsecurity:
+      moduleName: "github.com/acouvreur/traefik-modsecurity-plugin"
+      version: "v1.3.0"
+    
+    # SERVICES MANAGER
+    plugin-traefik-sablier:
+      moduleName: "github.com/sablierapp/sablier"
+      version: "v1.8.1"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    watch: true
+    exposedByDefault: false
+    # allowEmptyServices: true
+    # swarmMode: false
+
+  file:
+    filename: /etc/traefik/dynamic.yml
+    watch: true
+
+log:
+  level: INFO
+  # filePath: "/var/log/_traefik.log"
+  # format: json
+
+accessLog:
+  filePath: "/var/log/_access.log"
+  format: json
+
+metrics:
+  # otlp:
+  #   http:
+  #     endpoint: http://prometheus:9090/api/otlp/v1/metrics
+  #   addEntryPointsLabels: true
+  #   addRoutersLabels: true
+  #   addServicesLabels: true
+  #   explicitBoundaries:
+  #     - 0.1
+  #     - 0.3
+  #     - 1.2
+  #     - 5.0
+  prometheus:
+    buckets:
+      - 0.1
+      - 0.3
+      - 1.2
+      - 5.0
+
+entryPoints:
+  minecraft:
+    address: ":25565"
+    
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+
+  websecure:
+    address: ":443"
+    # http:
+    #   middlewares:
+    #     - crowdsec@file
+    #     - waf@file
+
+  traefik:
+    address: ":8080"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https

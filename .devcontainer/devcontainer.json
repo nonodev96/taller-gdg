@@ -1,13 +1,12 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
-	"name": "Custom pytorch",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"name": "Dev PyTorch",
 	// "image": "taller-gdg-runner_pytorch",
 	"build": {
 		"dockerfile": "Dockerfile-pytorch",
-		// Argumentos con los que se construye la imagen
-		"args": {}
+		"args": {
+		}
 	},
 	// Argumentos con los que se ejecuta el contenedor
 	"runArgs": [
@@ -16,25 +15,27 @@
 		"--ulimit",
 		"memlock=-1",
 		"--ulimit",
-		"stack=67108864"
+		"stack=67108864",
+		"--env-file",
+		".devcontainer/devcontainer.env"
 	],
 	"containerEnv": {
 		"TALLER_TOKEN": "${localEnv:TALLER_TOKEN}"
 	},
+	// 'remoteEnv' Añadir variables de entorno al contenedor de desarrollo. Más información: https://code.visualstudio.com/remote/advancedcontainers/environment-variables
 	"remoteEnv": {
 		"PATH": "${containerEnv:PATH}:/some/other/path"
 	},
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// 'forwardPorts' Hacer que una lista de puertos dentro del contenedor esté disponible localmente.
 	// "forwardPorts": [],
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "pip3 install --user -r requirements.txt",
+	// 'postStartCommand' Ejecutar comandos después de iniciar el contenedor.
+	// "postStartCommand": "",
+	// 'postCreateCommand' Ejecutar comandos después de crear el contenedor.
 	"postCreateCommand": [
 		"nvidia-smi"
+		// "pip3 install --user -r requirements.txt"
 	],
-	// Configure tool-specific properties.
-	// "customizations": {},
+	// 'customizations' Configurar propiedades específicas de la herramienta.
 	"customizations": {
 		"vscode": {
 			"settings": {
@@ -65,12 +66,13 @@
 		"source=${env:USERPROFILE}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
 		"source=${env:USERPROFILE}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
 	],
+	// Funciones para añadir al contenedor de desarrollo. Más información: https://containers.dev/features.
 	"features": {
 		"ghcr.io/nils-geistmann/devcontainers-features/zsh:0": {},
 		"ghcr.io/devcontainers-extra/features/zsh-plugins:0": {
 			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions.git"
 		}
 	}
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// 'remoteUser' Descomentar para conectarse como root en su lugar. Más información: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }

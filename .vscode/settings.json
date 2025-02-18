@@ -1,8 +1,17 @@
 {
+    "docker.environment": {
+        "DOCKER_HOST": "ssh://your-remote-user@your-remote-machine-fqdn-or-ip-here"
+    },
     "editor.wordWrap": "off",
     "editor.wordWrapColumn": 160,
     "cSpell.language": "en,es-ES",
     "yaml.schemas": {
+        "https://json.schemastore.org/traefik-v3.json": [
+            "traefik-static.yml"
+        ],
+        "https://json.schemastore.org/traefik-v2-file-provider.json": [
+            "traefik-dynamic.yml"
+        ],
         "https://www.artillery.io/schema.json": []
     }
 }
