@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "Python Debugger | Program",
+            "type": "debugpy",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/Apps/runner-4-python-app",
+            "program": "${workspaceFolder}/Apps/runner-4-python-app/main.py",
+            "envFile": "${workspaceFolder}/Apps/runner-4-python-app/.env",
+            "args": [
+               
+            ],
+        },
+        {
+            "name": "Python Debugger | Module | NVITOP",
+            "type": "debugpy",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "module": "nvitop",
+            "args": [
+               
+            ],
+        }
+    ]
+}

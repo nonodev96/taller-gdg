@@ -1,78 +1,76 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
-	"name": "Dev PyTorch",
-	// "image": "taller-gdg-runner_pytorch",
-	"build": {
-		"dockerfile": "Dockerfile-pytorch",
-		"args": {
-		}
-	},
-	// Argumentos con los que se ejecuta el contenedor
-	"runArgs": [
-		"--gpus=all",
-		"--ipc=host",
-		"--ulimit",
-		"memlock=-1",
-		"--ulimit",
-		"stack=67108864",
-		"--env-file",
-		".devcontainer/devcontainer.env"
-	],
-	"containerEnv": {
-		"TALLER_TOKEN": "${localEnv:TALLER_TOKEN}"
-	},
-	// 'remoteEnv' Añadir variables de entorno al contenedor de desarrollo. Más información: https://code.visualstudio.com/remote/advancedcontainers/environment-variables
-	"remoteEnv": {
-		"PATH": "${containerEnv:PATH}:/some/other/path"
-	},
-	// 'forwardPorts' Hacer que una lista de puertos dentro del contenedor esté disponible localmente.
-	// "forwardPorts": [],
-	// 'postStartCommand' Ejecutar comandos después de iniciar el contenedor.
-	// "postStartCommand": "",
-	// 'postCreateCommand' Ejecutar comandos después de crear el contenedor.
-	"postCreateCommand": [
-		"nvidia-smi"
-		// "pip3 install --user -r requirements.txt"
-	],
-	// 'customizations' Configurar propiedades específicas de la herramienta.
-	"customizations": {
-		"vscode": {
-			"settings": {
-				"terminal.integrated.defaultProfile.linux": "zsh",
-				"terminal.integrated.profiles.linux": {
-					"zsh": {
-						"path": "/bin/zsh"
-					}
-				}
-			},
-			"extensions": [
-				"ms-vscode.makefile-tools",
-				"ms-azuretools.vscode-docker",
-				"ms-vscode.cpptools-extension-pack",
-				"ms-python.python",
-				"ms-python.vscode-pylance",
-				"ms-toolsai.jupyter",
-				"ms-toolsai.vscode-jupyter-cell-tags",
-				"ms-toolsai.jupyter-keymap",
-				"ms-toolsai.jupyter-renderers",
-				"ms-toolsai.vscode-jupyter-slideshow",
-				"ms-toolsai.tensorboard",
-				"MS-CEINTL.vscode-language-pack-es"
-			]
-		}
-	},
-	"mounts": [
-		"source=${env:USERPROFILE}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
-		"source=${env:USERPROFILE}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
-	],
-	// Funciones para añadir al contenedor de desarrollo. Más información: https://containers.dev/features.
-	"features": {
-		"ghcr.io/nils-geistmann/devcontainers-features/zsh:0": {},
-		"ghcr.io/devcontainers-extra/features/zsh-plugins:0": {
-			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions.git"
-		}
-	}
-	// 'remoteUser' Descomentar para conectarse como root en su lugar. Más información: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+  "name": "Dev PyTorch",
+  // "image": "taller-gdg-runner_pytorch",
+  "build": {
+    "dockerfile": "Dockerfile-pytorch",
+    "args": {}
+  },
+  // Argumentos con los que se ejecuta el contenedor
+  "runArgs": [
+    "--gpus=all",
+    "--ipc=host",
+    "--ulimit",
+    "memlock=-1",
+    "--ulimit",
+    "stack=67108864",
+    "--env-file",
+    ".devcontainer/devcontainer.env"
+  ],
+  "containerEnv": {
+    "TALLER_TOKEN": "${localEnv:TALLER_TOKEN}"
+  },
+  // 'remoteEnv' Añadir variables de entorno al contenedor de desarrollo. Más información: https://code.visualstudio.com/remote/advancedcontainers/environment-variables
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/some/other/path"
+  },
+  // 'forwardPorts' Hacer que una lista de puertos dentro del contenedor esté disponible localmente.
+  // "forwardPorts": [],
+  // 'postStartCommand' Ejecutar comandos después de iniciar el contenedor.
+  // "postStartCommand": "",
+  // 'postCreateCommand' Ejecutar comandos después de crear el contenedor.
+  "postCreateCommand": [
+    "nvidia-smi"
+    // "pip3 install --user -r requirements.txt"
+  ],
+  // 'customizations' Configurar propiedades específicas de la herramienta.
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/bin/zsh"
+          }
+        }
+      },
+      "extensions": [
+        "ms-vscode.makefile-tools",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers",
+        "ms-toolsai.vscode-jupyter-slideshow",
+        "ms-toolsai.tensorboard",
+        "MS-CEINTL.vscode-language-pack-es",
+        "marp-team.marp-vscode"
+      ]
+    }
+  },
+  // 'mounts' Montar carpetas en el contenedor de desarrollo. Más información: https://containers.dev/implementors/json_reference/.
+  "mounts": [
+    "source=${env:USERPROFILE}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
+    "source=${env:USERPROFILE}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
+  ],
+  // Funciones para añadir al contenedor de desarrollo. Más información: https://containers.dev/features.
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}   
+  },
+  // 'remoteUser' Descomentar para conectarse como root en su lugar. Más información: https://aka.ms/dev-containers-non-root.
+  "remoteUser": "dev-user"
 }

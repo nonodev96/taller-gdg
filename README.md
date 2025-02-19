@@ -547,7 +547,8 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [gpu]
+              capabilities: 
+                - gpu
 ```
 
 ---
@@ -588,34 +589,74 @@ Debemos instalar la [extensión](https://marketplace.visualstudio.com/items?item
 
 ## Fichero devcontainer.json
 
-Desde la carpeta `./.devcontainer` editamos el fichero `devcontainer.json`, este nos permite definir el comportamiento del contenedor y del IDE. [Documentación containers.dev](https://containers.dev/implementors/json_reference/). 
+Desde la carpeta `./.devcontainer` editamos el fichero `devcontainer.json`, este nos permite definir el comportamiento del contenedor y del IDE. [containers.dev](https://containers.dev/implementors/json_reference/). 
 
 ```json
 {
   "name": "Dev PyTorch",
-  // "image": "taller-gdg-runner_pytorch",
-  // Argumentos con los que se construye la imagen
+  // Argumentos con los que se crea la imagen 
   "build": {
-		"dockerfile": "Dockerfile-pytorch",
-		"args": {
+    "dockerfile": "Dockerfile-pytorch",
+    "args": {
       "DEVCONTAINER_CLI": "true"
     }
-	},
+  },
   // Argumentos con los que se ejecuta el contenedor
-	"runArgs": [
-		"--gpus=all",
-		"--ipc=host",
-		"--ulimit",
-		"memlock=-1",
-		"--ulimit",
-		"stack=67108864"
-	],
+  "runArgs": [ "--gpus=all", "--ipc=host", "--ulimit", "memlock=-1", "--ulimit", "stack=67108864" ],
   "containerEnv": {
-		"TALLER_TOKEN": "${localEnv:TALLER_TOKEN}"
-	},
-	"remoteEnv": {
-		"PATH": "${containerEnv:PATH}:/some/other/path"
-	},
+    "TALLER_TOKEN": "${localEnv:TALLER_TOKEN}"
+  },
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/some/other/path"
+  },
+  /// ....
+}
+```
+
+---
+
+```json
+{
+  /// ....
+  "postCreateCommand": [ 
+    "nvidia-smi" 
+  ],
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/bin/zsh"
+          }
+        }
+      },
+      "extensions": [
+        // "ms-vscode.makefile-tools",
+        // ...
+      ]
+    }
+  },
+  /// ....
+}
+```
+
+---
+
+```json
+{ 
+  /// ....
+  // 'mounts' Montar carpetas en el contenedor de desarrollo. Más información: https://containers.dev/implementors/json_reference/.
+  "mounts": [
+    "source=${env:USERPROFILE}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
+    "source=${env:USERPROFILE}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
+  ],
+  // 'features' Funciones para añadir al contenedor de desarrollo. Más información: https://containers.dev/features.
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}   
+  },
+  // 'remoteUser' Descomentar para conectarse como root en su lugar. Más información: https://aka.ms/dev-containers-non-root.
+  "remoteUser": "dev-user"
 }
 ```
 
@@ -623,15 +664,15 @@ Desde la carpeta `./.devcontainer` editamos el fichero `devcontainer.json`, este
 
 ### Variables en devcontainer.json
 
-| Variable                              | Descripción |
-| ------------------------------------- | ----------- |
-| `${localEnv:VARIABLE_NAME}`           |             |
-| `${containerEnv:VARIABLE_NAME}`       |             |
-| `${localWorkspaceFolder}`             |             |
-| `${containerWorkspaceFolder}`         |             |
-| `${localWorkspaceFolderBasename}`     |             |
-| `${containerWorkspaceFolderBasename}` |             |
-| `${devcontainerId}`                   |             |
+| Variable                              |
+| ------------------------------------- |
+| `${localEnv:VARIABLE_NAME}`           |
+| `${containerEnv:VARIABLE_NAME}`       |
+| `${localWorkspaceFolder}`             |
+| `${containerWorkspaceFolder}`         |
+| `${localWorkspaceFolderBasename}`     |
+| `${containerWorkspaceFolderBasename}` |
+| `${devcontainerId}`                   |
 
 ---
 
@@ -652,7 +693,7 @@ Desde el fichero `./.vscode/settings.json` debemos modificar el host, también d
 - `containerEnv`: Para definir variables directamente en el contenedor.
   - Definir una variable solo en el contenedor
 - `remoteEnv`: Para pasar variables desde el host al contenedor.
-  - Usar una variable definida en el host	`remoteEnv`
+  - Usar una variable definida en el host `remoteEnv`
   - Configurar valores secretos sin guardarlos en el **DevContainer**
 
 ---
