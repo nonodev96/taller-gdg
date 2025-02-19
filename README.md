@@ -47,11 +47,11 @@ Soy Antonio Mudarra Machuca investigador en la Universidad de Jaén en el grupo 
 
 Mostrar las capacidades de **docker** para la ejecución de modelos de IA, simplificando todo el proceso de configuración de distintos entornos de desarrollo y ejecución.
 
-✅ Introducción a docker y contenedores especializados en IA
-✅ Comprender la diferencia entre imágenes y contenedores
-✅ Configuración de entornos con PyTorch, TensorFlow y herramientas clave
-✅ Conocer recursos de nvidia para el desarrollo y despliegue de modelos
-✅ Ejecución de modelos LLM en tu propio ordenador con ollama
+- ✅ Introducción a docker y contenedores especializados en IA
+- ✅ Comprender la diferencia entre imágenes y contenedores
+- ✅ Configuración de entornos con PyTorch, TensorFlow y herramientas clave
+- ✅ Conocer recursos de nvidia para el desarrollo y despliegue de modelos
+- ✅ Ejecución de modelos LLM en tu propio ordenador con ollama
 - Breve introducción a la seguridad en modelos de IA
 - Entender y manejar docker, gestionar recursos de un contenedor
 - Conocer otras herramientas como ollama o traefik
