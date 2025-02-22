@@ -158,19 +158,18 @@ Instalación de docker desktop en windows, siguiente, siguiente, siguiente.
 Fichero `Dockerfile` genérico.
 
 ```dockerfile
-# Definición de la imagen de docker de la que partir
 FROM ubuntu:22.04
 
 # Espacio de trabajo donde se iniciará el contenedor una vez creada la imagen
 WORKDIR /workspace_nonodev96
 
-# Ejemplo de comando para la creación de la imagen
-RUN sudo apt update
-RUN sudo apt install screen -y
+# Por defecto ENTRYPOINT es `/bin/sh -c`
+ENTRYPOINT ["/bin/bash", "-c"]
 
-# Ejemplo de ENTRYPOINT con CMD
-ENTRYPOINT ["/bin/echo"] # Por defecto ENTRYPOINT es `/bin/sh -c`
-CMD ["hello world!"]
+# Proporciona valores por defecto para un contenedor ejecutable. 
+# Si no se especifica un ejecutable, también debe especificarse ENTRYPOINT.
+# Solo puede haber una instrucción CMD en un Dockerfile.
+CMD ["echo 'hello world!' >> /workspace_nonodev96/hello_world.txt"]
 ```
 
 ---
@@ -662,9 +661,19 @@ Desde la carpeta `./.devcontainer` editamos el fichero `devcontainer.json`, este
 
 ---
 
+### Configuración del contenedor y del host.
+
+- `containerEnv`: Para definir variables directamente en el contenedor.
+  - Definir una variable solo en el contenedor
+- `remoteEnv`: Para pasar variables desde el host al contenedor.
+  - Usar una variable definida en el host `remoteEnv`
+  - Configurar valores secretos sin guardarlos en el **DevContainer**
+
+---
+
 ### Variables en devcontainer.json
 
-| Variable                              |
+| Variables                             |
 | ------------------------------------- |
 | `${localEnv:VARIABLE_NAME}`           |
 | `${containerEnv:VARIABLE_NAME}`       |
@@ -685,16 +694,6 @@ Desde el fichero `./.vscode/settings.json` debemos modificar el host, también d
     "DOCKER_HOST": "ssh://your-remote-user@your-remote-machine-or-ip-here"
 }
 ```
-
----
-
-### Configuración del contenedor y del host.
-
-- `containerEnv`: Para definir variables directamente en el contenedor.
-  - Definir una variable solo en el contenedor
-- `remoteEnv`: Para pasar variables desde el host al contenedor.
-  - Usar una variable definida en el host `remoteEnv`
-  - Configurar valores secretos sin guardarlos en el **DevContainer**
 
 ---
 
@@ -792,11 +791,234 @@ volumes:
 
 ## Traefik
 
+![](./assets/traefik.png)
+
+---
+
+### 🔹 Características principales:
+
+- ✅ **Soporte para múltiples backends**: Docker, Kubernetes, entre otros.
+- ✅ **SSL/TLS automatizado**: Let's Encrypt para generar y renovar certificados automáticamente.
+- ✅ **Balanceo de carga**: Distribuye tráfico entre múltiples instancias de un servicio.
+- ✅ **Dashboard y métricas**: Ofrece una interfaz para monitorear el tráfico y estadísticas.
+- ✅ **Plugins**: Ofrece una gran cantidad de plugins que permite personalizar los routers.
+- ✅ **Middleware personalizable**: Permite modificar peticiones y respuestas con reglas como redirecciones, autenticación, rate-limiting, etc.
+
+---
+
+En traefik solo tenemos 2 ficheros de configuraciópn, uno estatico que está asociado a la configuración de traefik y uno dinámico asociado a la configuración de los servicios.
+
+- docker-compose.yml
+- Config/traefik-static.yml
+- Config/traefik-dynamic.yml
+
+---
+
+### docker-compose.yml
+
+```yaml
+  traefik:
+    container_name: "${PROJECT_NAME}_traefik"
+    image: traefik:v3.2
+    restart: on-failure:1
+    environment:
+      TZ: ${TIMEZONE}
+    ports:
+      # Traefik
+      - "8080:8080"
+      # http(s)
+      - "80:80"
+      - "443:443"
+      # Minecraft
+      - "25565:25565/tcp"
+    volumes:
+      # Para que pueda controlar otros contenedores de docker
+      - /var/run/docker.sock:/var/run/docker.sock:ro 
+      # Configuración
+      - ./Config/traefik-static.yml:/etc/traefik/traefik.yml:ro
+      - ./Config/traefik-dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./Config/certs:/etc/certs:ro        
+    networks:
+      - proxy
+      - backend
+    labels:
+      - traefik.http.routers.${PROJECT_NAME}_traefik.tls=true
+      - traefik.http.routers.${PROJECT_NAME}_traefik.entrypoints=traefik
+      - traefik.http.routers.${PROJECT_NAME}_traefik.service=api@internal
+```
+
+---
+
+### traefik-static.yml
+
+Se trata de configuración fija de traefik.
+
+```yaml
+global:       # Rules v2
+api:          # traefik info
+experimental: # Plugins
+# Providers
+providers:    # Docker, kubernets, etc...
+# Features
+log:        
+accessLog:
+metrics:      # OPEN TELEMETRICS
+tracing:      # OPEN TELEMETRICS
+
+entryPoints:
+
+# etc...
+
+```
+
+---
+
+### EntryPoints traefik-static.yml
+
+Representan un puerto y puede ser tcp, udp o http(s), este se redirige desde traefik a los distintos servicios.
+
+```yaml
+entryPoints:
+  traefik:
+    address: ":8080"
+    # ...
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+  minecraft:
+    address: ":25565"
+```
+
+---
+
+### Ejemplo de servicio en traefik
+
+Añadimos al `docker-compose.yml` el servicio de docker.
+
+```yaml
+services:
+  # ...
+  traefik_whoami:
+    image: traefik/whoami
+    container_name: "${PROJECT_NAME}_traefik_whoami"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+      - proxy
+    labels:
+      - traefik.enable=true
+```
+
+---
+
+### traefik-dynamic.yml
+
+Añadimos al fichero de configuración dinámica de traefik (`traefik-dynamic.yml`) el _router_, el _service_ y los _middlewares_. Este fichero se actualiza de forma dinámica.
+
+```yaml
+http:
+  # ======================================
+  # Middlewares
+  # ======================================
+  middlewares:
+    waf-modsecurity:
+      plugin:
+        plugin-traefik-modsecurity:
+          maxBodySize: 10485760
+          modSecurityUrl: "http://traefik_waf:8080"
+        
+    secure-public:
+      chain:
+        middlewares:
+          - waf-modsecurity # Plugin
+          # - <<<<middleware>>>>
+```
+
+---
+
+```yaml
+  # ======================================
+  # Routers
+  # ======================================
+  routers:
+    whoami:
+      rule: "Host(`whoami.nonodev96.dev`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - secure-public@file
+      service: "whoami-svc"
+      tls: {}
+```
+
+---
+
+```yaml
+  # ======================================
+  # Services
+  # ======================================
+  services:
+    whoami-svc:
+      loadBalancer:
+        servers:
+          # protocolo + nombre del servicio de docker compose + puerto interno
+          - url: "http://traefik_whoami:80" 
+```
+
+---
+
+### Hosts para traefik si no tenemos DNS
+
 Para traefik debemos añadir la redirección al servicio, con ubuntu/debian `sudo nano /etc/hosts` y para Windows abrir el fichero `C:\Windows\System32\drivers\etc\hosts` con el editor de texto dando permisos de administrador y añadir los siguientes DNS.
 
 ```bash
 # Añadimos el host
-127.0.0.1 chat.nonodev96.dev
+127.0.0.1 traefik.nonodev96.dev
+127.0.0.1 whoami.nonodev96.dev
+127.0.0.1 uptime.nonodev96.dev
+127.0.0.1 photoprism.nonodev96.dev
+# plugins
+127.0.0.1 traefik-github-oauth.nonodev96.dev # Tarea por si te interesa
+
+# Haremos este en el taller
+127.0.0.1 chat.nonodev96.dev 
+```
+
+---
+
+### Certificados
+
+```bash
+# Debian / Ubuntu
+sudo apt install mkcert
+# PowerShell Windows admin
+choco install mkcert
+
+# Ejecutar como administrador
+mkcert -install
+mkcert -cert-file Config/certs/taller-cert.pem 
+       -key-file Config/certs/taller-key.pem "nonodev96.dev" "*.nonodev96.dev"
+```
+
+---
+
+### Despliegue
+
+```bash
+docker compose down [servicio];
+docker compose up -d [servicio];
+```
+
+```bash
+docker compose down;
+docker compose up -d;
 ```
 
 ---
@@ -807,13 +1029,11 @@ Para traefik debemos añadir la redirección al servicio, con ubuntu/debian `sud
   - [CUDA GUIDE Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/)
   - [CUDA GUIDE Linux](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)
 - [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
-- [Catálogo de contenedores de NVIDIA](https://catalog.ngc.nvidia.com/)
+  - [cuDNN](https://developer.nvidia.com/cudnn), [cuBLAS](https://developer.nvidia.com/cublas), [cuSPARSE](https://developer.nvidia.com/cusparse)
+  - [Catálogo de contenedores de NVIDIA](https://catalog.ngc.nvidia.com/)
 - [VSCODE Extensión Docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker)
-- [cuDNN](https://developer.nvidia.com/cudnn)
-- [cuBLAS](https://developer.nvidia.com/cublas)
-- [cuSPARSE](https://developer.nvidia.com/cusparse)
-- [OPEN WEB UI](https://docs.openwebui.com/)
-- [ollama](https://ollama.com/)
+- [OLLAMA](https://ollama.com/), [OPEN WEB UI](https://docs.openwebui.com/)
+- [Traefik](https://doc.traefik.io/traefik/v3.2/)
 
 ---
 

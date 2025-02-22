@@ -23,6 +23,8 @@
         "ms-vscode.remote-server",
         "ms-vscode.vscode-js-profile-table",
         "njpwerner.autodocstring",
-        "tamasfe.even-better-toml"
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "marp-team.marp-vscode"
     ]
 }

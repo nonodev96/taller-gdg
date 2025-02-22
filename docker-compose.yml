@@ -154,9 +154,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./Config/traefik-static.yml:/etc/traefik/traefik.yml:ro
       - ./Config/traefik-dynamic.yml:/etc/traefik/dynamic.yml:ro
-      - ./Config/certs:/etc/certs:ro
-      - /home/nonodev96/.local/share/mkcert/rootCA-key.pem:/etc/ssl/certs/rootCA-key.pem
-      - /home/nonodev96/.local/share/mkcert/rootCA.pem:/etc/ssl/certs/rootCA.pem          
+      - ./Config/certs:/etc/certs:ro        
     networks:
       - proxy
       - backend
@@ -215,7 +213,7 @@ services:
     environment:
       GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID}
       GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET}
-      API_BASE_URL: "https://traefik-github.nonodev96.dev"
+      API_BASE_URL: "https://traefik-github-oauth.nonodev96.dev"
       DEBUG_MODE: true
       LOG_LEVEL: "debug"
     networks:
@@ -238,7 +236,7 @@ services:
 
   traefik_whoami:
     image: traefik/whoami
-    container_name: "${PROJECT_NAME}_whoami"
+    container_name: "${PROJECT_NAME}_traefik_whoami"
     security_opt:
       - no-new-privileges:true
     networks:
@@ -246,15 +244,19 @@ services:
       - proxy
     labels:
       - traefik.enable=true
+      - sablier.enable=true
+      - sablier.group=whoami
 
-  photoprism:
-    container_name: ${PROJECT_NAME}_photoprism
+  traefik_photoprism:
+    container_name: "${PROJECT_NAME}_traefik_photoprism"
     image: photoprism/photoprism:latest
     environment:
       PHOTOPRISM_SITE_URL: "https://photoprism.nonodev96.dev/"
       PHOTOPRISM_DISABLE_TLS: "false"
       PHOTOPRISM_ADMIN_USERNAME: ${PHOTOPRISM_ADMIN_USERNAME}
       PHOTOPRISM_ADMIN_PASSWORD: ${PHOTOPRISM_ADMIN_PASSWORD}
+    depends_on:
+      - traefik
     networks:
       - backend
       - proxy
@@ -264,8 +266,8 @@ services:
     labels:
       - traefik.enable=true
 
-  minecraft:
-    container_name: "${PROJECT_NAME}_minecraft-server"
+  traefik_minecraft:
+    container_name: "${PROJECT_NAME}_traefik_minecraft"
     image: itzg/minecraft-server:latest
     tty: true
     stdin_open: true
@@ -281,6 +283,8 @@ services:
       ENABLE_WHITELIST: TRUE
       ENFORCE_WHITELIST: TRUE
       OVERRIDE_WHITELIST: true
+    depends_on:
+      - traefik
     networks:
       - proxy
     volumes:

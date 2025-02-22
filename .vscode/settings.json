@@ -1,6 +1,9 @@
 {
     "docker.environment": {
-        "DOCKER_HOST": "ssh://your-remote-user@your-remote-machine-fqdn-or-ip-here"
+        // "DOCKER_HOST": "ssh://your-remote-user@your-remote-machine-fqdn-or-ip-here"
+    },
+    "files.exclude": {
+        ".env": true
     },
     "editor.wordWrap": "off",
     "editor.wordWrapColumn": 160,

@@ -39,37 +39,15 @@ providers:
     watch: true
 
 log:
-  level: INFO
   # filePath: "/var/log/_traefik.log"
   # format: json
+  level: INFO
 
 accessLog:
   filePath: "/var/log/_access.log"
   format: json
-
-metrics:
-  # otlp:
-  #   http:
-  #     endpoint: http://prometheus:9090/api/otlp/v1/metrics
-  #   addEntryPointsLabels: true
-  #   addRoutersLabels: true
-  #   addServicesLabels: true
-  #   explicitBoundaries:
-  #     - 0.1
-  #     - 0.3
-  #     - 1.2
-  #     - 5.0
-  prometheus:
-    buckets:
-      - 0.1
-      - 0.3
-      - 1.2
-      - 5.0
-
+  
 entryPoints:
-  minecraft:
-    address: ":25565"
-    
   web:
     address: ":80"
     http:
@@ -80,10 +58,6 @@ entryPoints:
 
   websecure:
     address: ":443"
-    # http:
-    #   middlewares:
-    #     - crowdsec@file
-    #     - waf@file
 
   traefik:
     address: ":8080"
@@ -92,3 +66,7 @@ entryPoints:
         entryPoint:
           to: websecure
           scheme: https
+
+  minecraft:
+    address: ":25565"
+    

@@ -1,14 +1,13 @@
 tcp:
-
   # ======================================
   # Middlewares TCP
   # ======================================
   middlewares:
     ip-allow-list-admin-TCP:
-      ipWhiteList:
+      ipAllowList:
         sourceRange:
-          - 192.168.1.100
-
+          - 127.0.0.1 # localhost
+          - 192.168.1.100 # PC Hogar
 
   # ======================================
   # Routers TCP
@@ -29,7 +28,7 @@ tcp:
     minecraft-svc-TCP:
       loadBalancer:
         servers:
-          - address: "minecraft:25565"
+          - address: "traefik_minecraft:25565"
 
 http:
   # ======================================
@@ -71,13 +70,15 @@ http:
       plugin:
         plugin-traefik-modsecurity:
           maxBodySize: 10485760
-          modSecurityUrl: "http://traefik_waf:80"
+          modSecurityUrl: "http://traefik_waf:8080"
 
     # Middlewares
     ip-allow-list-admin:
       ipAllowList:
         sourceRange:
-          - 192.168.1.100
+          - 127.0.0.1     # localhost
+          - 192.168.1.100 # IP Fija
+          - 172.20.0.5    # WSL
 
     # Middlewares
     compress:
@@ -92,8 +93,8 @@ http:
     secure-private:
       chain:
         middlewares:
-          - ip-allow-list-admin
-          - auth-github-oauth
+          # - ip-allow-list-admin
+          # - auth-github-oauth
           - waf-modsecurity
           - compress
 
@@ -125,7 +126,7 @@ http:
           - main: "nonodev96.dev"
             sans:
               - "*.nonodev96.dev"
-    
+
     uptime:
       rule: "Host(`uptime.nonodev96.dev`)"
       entryPoints:
@@ -140,9 +141,18 @@ http:
       entryPoints:
         - websecure
       middlewares:
-        - whoami-sablier@file
+        - sablier-whoami@file
         - secure-public@file
       service: "whoami-svc"
+      tls: {}
+
+    photoprism:
+      rule: "Host(`photoprism.nonodev96.dev`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - secure-public@file
+      service: "photoprism-svc"
       tls: {}
 
   # ======================================
@@ -159,10 +169,16 @@ http:
         servers:
           - url: "http://traefik_uptime_kuma:3001"
 
+    photoprism-svc:
+      loadBalancer:
+        servers:
+          - url: "http://traefik_photoprism:2342"
+        passHostHeader: true
+
 tls:
   options:
     default:
       sniStrict: true
   certificates:
-    - certFile: "/etc/certs/nonodev96-cert.pem"
-      keyFile: "/etc/certs/nonodev96-key.pem"
+    - certFile: "/etc/certs/taller-cert.pem"
+      keyFile: "/etc/certs/taller-key.pem"
