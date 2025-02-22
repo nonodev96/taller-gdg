@@ -667,12 +667,21 @@ Desde la carpeta `./.devcontainer` editamos el fichero `devcontainer.json`, este
 
 ### Comandos útiles
 
+En el sistema anfitrión:
+
+```bash
+git config --global --add safe.directory /workspaces/taller-gdg
+```
+
+En el contenedor
+
 ```bash
 printenv
 echo "$(whoami) @ $(hostname) # $UID:$GID"
 
 git config user.name
 git config user.email
+cat /home/ubuntu/.gitconfig
 
 cat /etc/os-release
 nvidia-smi
