@@ -647,16 +647,36 @@ Desde la carpeta `./.devcontainer` editamos el fichero `devcontainer.json`, este
   /// ....
   // 'mounts' Montar carpetas en el contenedor de desarrollo. Más información: https://containers.dev/implementors/json_reference/.
   "mounts": [
-    "source=${env:USERPROFILE}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
-    "source=${env:USERPROFILE}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
+    // WINDOWS  --> USERPROFILE
+    "source=${env:USERPROFILE}/.ssh,target=/home/ubuntu/.ssh,type=bind,consistency=cached",
+    "source=${env:USERPROFILE}/.gitconfig,target=/home/ubuntu/.gitconfig,type=bind,consistency=cached"
+    // LINUX    --> HOME
+    "source=${env:HOME}/.ssh,target=/home/ubuntu/.ssh,type=bind,consistency=cached",
+    "source=${env:HOME}/.gitconfig,target=/home/ubuntu/.gitconfig,type=bind,consistency=cached"
   ],
   // 'features' Funciones para añadir al contenedor de desarrollo. Más información: https://containers.dev/features.
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {}   
   },
   // 'remoteUser' Descomentar para conectarse como root en su lugar. Más información: https://aka.ms/dev-containers-non-root.
-  "remoteUser": "dev-user"
+  "remoteUser": "ubuntu"
 }
+```
+
+---
+
+### Comandos útiles
+
+```bash
+printenv
+echo "$(whoami) @ $(hostname) # $UID:$GID"
+
+git config user.name
+git config user.email
+
+cat /etc/os-release
+nvidia-smi
+nvidia-smi topo -m
 ```
 
 ---
