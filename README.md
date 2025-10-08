@@ -17,6 +17,9 @@ _footer: 'nonodev96'
 
 [@nonodev96/taller-gdg](https://github.com/nonodev96/taller-gdg)
 
+- [Enlace - Parte 1](https://github.com/nonodev96/taller-gdg/tree/main)
+- [Enlace - Parte 2](https://github.com/nonodev96/taller-gdg/tree/parte-2)
+
 ---
 
 ## Quien soy
